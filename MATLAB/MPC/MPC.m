@@ -1,6 +1,15 @@
-function u = MPC(Ai, Bi, N, xi, H, lb, ub)
+function u = MPC(Ai, Bi, xi, MPC_settings)
+H = MPC_settings.H;
+lb = MPC_settings.lb;
+ub = MPC_settings.ub;
+N = MPC_settings.N;
+nx = MPC_settings.nx;
+nu = MPC_settings.nu;
 
 Aeq = gen_aeq(Ai, Bi, N);
-Beq = gen_beq(Ai, xi, N);
+beq = gen_beq(Ai, xi, N);
 
-z = quadprog(H, )
+z0 = [xi;zeros((N-1)*nx + N*nu,1)];
+
+z = quadprog(H, [], [], [], Aeq, beq, lb, ub, z0);
+u = z(nx*N+1 : nx*N + nu);

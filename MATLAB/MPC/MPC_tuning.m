@@ -1,26 +1,38 @@
 nx=6;
 nu=7;
+N = 10;                 % Time steps
+x0 = zeros(nx,1);       % Initial states
+z = zeros();
 
 % Lower bounds
-lbx = zeros(nx,1);
-lbu = zeros(nu,1);
+lbx = zeros(nx*N,1);
+lbu = zeros(nu*N,1);
 lb = [lbx; lbu];
 
 % Upper bounds
-ubx = ones(nx,1);
-ubu = ones(nu,1);
+ubx = ones(nx*N,1);
+ubu = ones(nu*N,1);
 ub = [ubx; ubu];
 
 % Tune cost function
-Q = eye(nx);
-R = eye(nu);
-H = blkdiag(diag_repeat(Q,N),diag_repeat(R,N)); % Generate large H 
+Q = eye(nx)*1.5;
+R = eye(nu)*3;
+H = blkdiag(diag_repeat(Q,N),diag_repeat(R,N));
 
-f = zeros(ndmis(H),1);
+f = zeros(size(H,1),1);
+
+% Create object
+MPC_settings.N = N;
+MPC_settings.nx = nx;
+MPC_settings.nu = nu;
+MPC_settings.lb = lb;
+MPC_settings.ub = ub;
+MPC_settings.H = H;
+MPC_settings.f = f;
 
 
 
 
-N = 10;                 % Time steps
-x0 = zeros(nx,1);        % Initial states
-z = zeros();
+
+
+
