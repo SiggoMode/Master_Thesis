@@ -3,6 +3,7 @@ nu=7;
 N = 10;                 % Time steps
 x0 = zeros(nx,1);       % Initial states
 z = zeros();
+options = optimoptions('quadprog', 'Algorithm', 'active-set');
 
 % Lower bounds
 lbx = zeros(nx*N,1);
@@ -29,6 +30,7 @@ MPC_settings.lb = lb;
 MPC_settings.ub = ub;
 MPC_settings.H = H;
 MPC_settings.f = f;
+MPC_settings.options = options;
 
 
 
