@@ -1,4 +1,5 @@
 % MATLAB
 *.asv
 *.slxc
+*.autosave
 MATLAB/slprj
