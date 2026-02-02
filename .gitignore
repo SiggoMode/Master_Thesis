@@ -3,3 +3,31 @@
 *.slxc
 *.autosave
 MATLAB/slprj
+
+
+% Python
+
+% C/C++
+build/
+*.exe
+*.obj
+*.o
+*.pdb
+*.ilk
+*.lib
+*.dll
+*.so
+*.dylib
+*.ninja
+*.vcxproj
+
+% CMAKE
+CMakeFiles/
+CMakeCache.txt
+CMakePresets.json
+*CMakeUserPresets.json
+
+% Visual Studio
+.vs/
+.vscode/
+
