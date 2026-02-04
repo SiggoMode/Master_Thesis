@@ -31,3 +31,5 @@ CMakePresets.json
 .vs/
 .vscode/
 
+% User added folders
+camera_calibrations/
