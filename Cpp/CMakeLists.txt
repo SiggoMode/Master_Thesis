@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(ObjectTracking)
 
-find_package(opencv CONFIG REQUIRED)
+find_package(OpenCV CONFIG REQUIRED)
 
 
 add_executable(Main src/main.cpp)
