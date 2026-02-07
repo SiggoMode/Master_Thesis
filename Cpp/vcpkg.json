@@ -1,6 +1,10 @@
 {
   "dependencies": [
     "opencv",
-    "qtbase"
+    {
+      "name": "qtbase",
+      "default-features": false,
+      "features": [ "network" ]
+    }
   ]
 }
