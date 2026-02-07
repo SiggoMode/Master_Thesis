@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(ObjectTracking)
 
 find_package(OpenCV CONFIG REQUIRED)
+find_package(Qt6 REQUIRED COMPONENTS Network)
 
 
 add_executable(Main src/main.cpp)
@@ -16,8 +17,8 @@ target_include_directories(CalibrateCamera PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/
 target_include_directories(CreateBoard PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(DetectMarkers PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-target_link_libraries(Main PRIVATE ${OpenCV_LIBS})
-target_link_libraries(Testing PRIVATE ${OpenCV_LIBS})
-target_link_libraries(CalibrateCamera PRIVATE ${OpenCV_LIBS})
-target_link_libraries(CreateBoard PRIVATE ${OpenCV_LIBS})
-target_link_libraries(DetectMarkers PRIVATE ${OpenCV_LIBS})
+target_link_libraries(Main PRIVATE ${OpenCV_LIBS} Qt6::Network)
+target_link_libraries(Testing PRIVATE ${OpenCV_LIBS} Qt6::Network)
+target_link_libraries(CalibrateCamera PRIVATE ${OpenCV_LIBS} Qt6::Network)
+target_link_libraries(CreateBoard PRIVATE ${OpenCV_LIBS} Qt6::Network)
+target_link_libraries(DetectMarkers PRIVATE ${OpenCV_LIBS} Qt6::Network)
