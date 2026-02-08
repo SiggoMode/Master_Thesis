@@ -7,7 +7,6 @@
 #include <QByteArray>
 #include <QDebug>
 
-template <typename T>
 class UdpClient{
     public:
         UdpClient(const QHostAddress& targetAddress, quint16 targetPort) :
@@ -18,9 +17,9 @@ class UdpClient{
             stream_.setByteOrder(QDataStream::BigEndian);
         }
 
-        void send(T& data) {
+        void send(QByteArray& data) {
             datagram_.clear();
-            stream_ << data;
+            datagram_ = data;
             socket_.writeDatagram(datagram_, targetAddress_, targetPort_);
             qDebug() << "Sent: " << data;
         }

@@ -1,4 +1,6 @@
-#include <filesystem>
+#include <UdpClient.hpp>
+#include <qcoreapplication.h>
+#include <QCoreApplication>
 #include <opencv2/highgui.hpp>
 #include <opencv2/objdetect/aruco_detector.hpp>
 #include <iostream>
@@ -7,12 +9,12 @@
 
 int main(int argc, char *argv[])
 {
-    /*
+    /*   // Camera testing
     cv::FileStorage dp_fs("../params/test.json", cv::FileStorage::WRITE);
     cv::aruco::DetectorParameters detectorParams;
     detectorParams.writeDetectorParameters(dp_fs);
     dp_fs.release();
-    */
+    
 
     cv::aruco::DetectorParameters detectorParams;
     //detectorParams.readDetectorParameters(dp_fs.root());
@@ -81,5 +83,18 @@ int main(int argc, char *argv[])
         }
 
     }
+        */
+
+    // UDP testing
+
+    QCoreApplication app(argc, argv);
+    QHostAddress targetAddress{"127.0.0.1"}; 
+    quint16 targetPort{8080};
+    UdpClient udpClient(targetAddress, targetPort);
+
+    QByteArray message = "A:109.1B:905.3";
+
+    udpClient.send(message);
+
     return 0;
 }
