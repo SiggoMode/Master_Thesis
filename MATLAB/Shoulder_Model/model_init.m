@@ -1,12 +1,17 @@
 % Parameters
-m = 5; % Arm mass in kg
-Lh = 1; % Arm length in meters
-R = 0.1; % Cylinder radius in meters (Arm model)
+system_params.m = 5;   % Arm mass in kg
+system_params.L_h = 1; % Arm length in meters
+system_params.R = 0.1; % Cylinder radius in meters (Arm model)
 %R = 5;
-g = 9.81; % m/s^2
+system_params.g = 9.81; % m/s^2
 
-W = diag([m*Lh^2 / 3;m*Lh^2 / 3; m*R^2 / 2]);
-W_inv = inv(W);
+% Save space
+m = system_params.m;
+L_h = system_params.L_h; % Extract arm length from parameters
+R_h = system_params.R;
+
+system_params.W = diag([m*L_h^2 / 3;m*L_h^2 / 3; m*R_h^2 / 2]);
+W_inv = inv(system_params.W);
 
 % Get position parameters
 % pos_param = 'GPT';
@@ -15,6 +20,10 @@ pos_init;
 
 % Get alphas for lower/upper rotator cuff ratio control
 alphas_init;
+
+% Create bus object for Simulink
+busInfo = Simulink.Bus.createObject(system_params);
+busName = busInfo.busName;
 
 % Initial conditions
 q0 = [0; 0; 0];

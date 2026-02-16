@@ -4,7 +4,7 @@ function alpha = alpha_calc(muscle)
     alpha = asin(-r(3));
 end
 
-AUR.alpha = alpha_calc(AUR);
-ALR.alpha = alpha_calc(ALR);
-PUR.alpha = alpha_calc(PUR);
-PLR.alpha = alpha_calc(PLR);
+system_params.cables.AUR.alpha = alpha_calc(system_params.cables.AUR);
+system_params.cables.ALR.alpha = alpha_calc(system_params.cables.ALR);
+system_params.cables.PUR.alpha = alpha_calc(system_params.cables.PUR);
+system_params.cables.PLR.alpha = alpha_calc(system_params.cables.PLR);

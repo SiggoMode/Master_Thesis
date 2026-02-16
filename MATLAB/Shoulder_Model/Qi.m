@@ -1,12 +1,12 @@
-function Q = Qi(f, q, rpli, rpmi, R)
+function Q_force = Qi(f, q, rpli, rpmi, R_h)
     % Calc drdq
-    drdq_ = drdq(R*rpli, q);
+    drdq_ = drdq(R_h*rpli, q);
 
     % Calc F
-    rpli_pmi = - R*rpli + rpmi;
+    rpli_pmi = - R_h*rpli + rpmi;
     F = Force(f, rpli_pmi);
 
     % Calc Q
-    Q = drdq_.' * F;
+    Q_force = drdq_.' * F;
 end
 

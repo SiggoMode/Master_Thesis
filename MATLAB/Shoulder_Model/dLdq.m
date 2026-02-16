@@ -1,4 +1,9 @@
-function V_dot = dLdq(q, qdot, W, m, g, Lh)
+function dLdq_ = dLdq(q, qdot, system_params)
+    W = system_params.W;
+    m = system_params.m;
+    g = system_params.g;
+    L_h = system_params.L_h;
+
     theta = q(1);
     phi = q(2);
     %psi = q(3); % Never used
@@ -16,12 +21,12 @@ function V_dot = dLdq(q, qdot, W, m, g, Lh)
     dTdpsi = 0;
 
 
-    dV_dtheta = .5*Lh*m*g*sin(theta)*cos(phi);
-    dV_dphi = .5*Lh*m*g*cos(theta)*sin(phi);
+    dV_dtheta = .5*L_h*m*g*sin(theta)*cos(phi);
+    dV_dphi = .5*L_h*m*g*cos(theta)*sin(phi);
     dV_dpsi = 0;
 
     dTdq = [dTdtheta; dTdphi; dTdpsi];
     dVdq = [dV_dtheta; dV_dphi; dV_dpsi];
 
-    V_dot = dTdq - dVdq;
+    dLdq_ = dTdq - dVdq;
 end
