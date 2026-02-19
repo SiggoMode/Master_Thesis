@@ -19,5 +19,9 @@ gen_beq(A, x0, N)
 A = eye(6);
 B = [eye(6), ones(6,1)];
 x0 = zeros(6,1);
+x_sp = ones(3,1);
 MPC_tuning;
-u = MPC(A, B, x0, MPC_settings);
+%u = MPC(A,B,x0,MPC_settings);
+%options = optimoptions('quadprog', 'Algorithm', 'active-set');
+options = optimoptions('fmincon', 'Algorithm', 'sqp');
+u = MPC(A, B, x0, x_sp, MPC_settings, options);

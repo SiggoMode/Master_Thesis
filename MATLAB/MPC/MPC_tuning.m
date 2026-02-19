@@ -1,40 +1,77 @@
-nx=6;
-nu=7;
-N = 10;                 % Time steps
-x0 = zeros(nx,1);       % Initial states
+nx_mpc=7;
+nu_mpc=7;
+N = 64;                   % Time steps
+M = 20;                    % Control horizon
+x0_mpc = zeros(nx_mpc,1); % Initial states
 z = zeros();
-options = optimoptions('quadprog', 'Algorithm', 'active-set');
+algorithm = 'active-set';
 
 % Lower bounds
-lbx = zeros(nx*N,1);
-lbu = zeros(nu*N,1);
+lbA = -0.1;
+lbB = -pi/2;
+lbC = -pi/2;
+lbAdot = -99999;
+lbBdot = -99999;
+lbCdot = -99999;
+lbx = repmat([lbA;lbB;lbC;lbAdot;lbBdot;lbCdot], [N,1]);
+lbu = zeros(nu_mpc*N,1);
 lb = [lbx; lbu];
 
 % Upper bounds
-ubx = ones(nx*N,1);
-ubu = ones(nu*N,1);
+ubA = pi/2;
+ubB = pi/2;
+ubC = pi/2;
+ubAdot = 99999;
+ubBdot = 99999;
+ubCdot = 99999;
+ubx = repmat([ubA;ubB;ubC;ubAdot;ubBdot;ubCdot], [N,1]);
+ubu = ones(nu_mpc*N,1)*2500;
 ub = [ubx; ubu];
 
 % Tune cost function
-Q = eye(nx)*1.5;
-R = eye(nu)*3;
+Q = eye(nx_mpc)*100;
+R = eye(nu_mpc)*1;
 H = blkdiag(diag_repeat(Q,N),diag_repeat(R,N));
 
 f = zeros(size(H,1),1);
 
 % Create object
 MPC_settings.N = N;
-MPC_settings.nx = nx;
-MPC_settings.nu = nu;
+MPC_settings.nx = nx_mpc;
+MPC_settings.nu = nu_mpc;
 MPC_settings.lb = lb;
 MPC_settings.ub = ub;
 MPC_settings.H = H;
 MPC_settings.f = f;
-MPC_settings.options = options;
 
+% Create bus object for simulink
+MPC_bus_info = Simulink.Bus.createObject(MPC_settings);
+oldName = MPC_bus_info.busName;
+busObj = evalin('base', oldName);
+assignin('base', 'MPCBus', busObj);
 
+% Remove the auto name
+evalin('base', ['clear ' oldName]);
 
+% MPC Controller object init
+% MV = Manipulated variable (u), OV = OutputVariable (y) frå Cx + Du
+Ad_init = eye(nx_mpc);
+Bd_init = [zeros(nx_mpc,nu_mpc)];
+Cd = [eye(3), zeros(3,size(Ad_init,1)-3)];
+Dd = zeros(size(Cd,1), size(Bd_init,2));
+model_init = ss(Ad_init, Bd_init, Cd, Dd, dt);
+MPC_controller = mpc(model_init, dt, N, M);
+MPC_controller.Weights.OutputVariables = ones(1,3)*1000; %  [angle weight]
+% Visst ej vil penilize angle rates også, må C endrast til eye(6)...
+MPC_controller.Weights.ManipulatedVariables = [ones(1,nu_mpc)];
+MPC_controller.Weights.ManipulatedVariablesRate = [ones(1,nu_mpc)];
+for i = 1:nu_mpc
+    MPC_controller.MV(i).Min = lbu(i);
+    MPC_controller.MV(i).Max = ubu(i);
+end
 
-
-
-
+for i = 1:3
+    MPC_controller.OV(i).Min = lbx(i);
+    MPC_controller.OV(i).Max = ubx(i);
+end
+setEstimator(MPC_controller,'custom');
