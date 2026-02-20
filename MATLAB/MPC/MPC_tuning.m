@@ -1,5 +1,7 @@
-nx_mpc=7;
-nu_mpc=7;
+nx_mpc = nx_EKF+1; % Add affine term 
+nd_mpc = nd_EKF;
+nx_tot = nx_mpc+nd_mpc;
+nu_mpc=nu_EKF;
 N = 64;                   % Time steps
 M = 20;                    % Control horizon
 x0_mpc = zeros(nx_mpc,1); % Initial states
@@ -60,10 +62,10 @@ evalin('base', ['clear ' oldName]);
 
 % MPC Controller object init
 %MV = Manipulated variable (u), OV = OutputVariable (y) frå Cx + Du
-Ad_init = eye(nx_mpc) - 0.1*eye(nx_mpc);
-Bd_init = eye(nx_mpc, nu_mpc);
+Ad_init = eye(nx_tot) - 0.1*eye(nx_tot);
+Bd_init = eye(nx_tot, nu_mpc);
 if useAllEstimates 
-    Cd = [eye(nx_mpc-1), zeros(nx_mpc-1,1)];
+    Cd = [eye(nx_mpc-1), zeros(nx_mpc-1,size(Ad_init,1)-nx_mpc+1)];
     outputWeights = [ones(1,3)*angleWeights, ones(1,3)*angelRateWeights];
 else
     Cd = [eye(3), zeros(3,size(Ad_init,1)-3)];

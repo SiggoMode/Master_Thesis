@@ -2,13 +2,14 @@
 system_params.m = 5;   % Arm mass in kg
 system_params.L_h = 1; % Arm length in meters
 system_params.R = 0.1; % Cylinder radius in meters (Arm model)
-%R = 5;
 system_params.g = 9.81; % m/s^2
+system_params.dt = 0.01;
 
 % Save space
 m = system_params.m;
 L_h = system_params.L_h; % Extract arm length from parameters
 R_h = system_params.R;
+dt = system_params.dt;
 
 system_params.W = diag([m*L_h^2 / 3;m*L_h^2 / 3; m*R_h^2 / 2]);
 W_inv = inv(system_params.W);
@@ -38,7 +39,6 @@ qdot0 = [0;0;0];
 % Dummy controller inputs
 angle = 60; % In degrees 
 Tau = 10; % 1/f
-dt = 0.01;
 T_stop = 100; % seconds
 t = 0:dt:T_stop;
 x_s = zeros(length(t), 6); % N×nx matrix

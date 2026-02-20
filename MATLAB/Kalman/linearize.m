@@ -1,4 +1,4 @@
-function [Ad,Bd,c] = linearize(x0,u0,Ts,system_params)
+function [Ad,Bd,c] = linearize(x0,u0,system_params)
 
 n = length(x0);
 m = length(u0);
@@ -7,6 +7,7 @@ eps_base = 1e-6;
 
 Ad = zeros(n,n);
 Bd = zeros(n,m);
+Ts = system_params.dt;
 
 % Nominal next state
 f0 = runge_kutta4(x0,u0,Ts,system_params);
