@@ -22,6 +22,7 @@ pos_init;
 alphas_init;
 
 % Create bus object for Simulink
+evalin('base', ['clear ' 'System_params_bus']);
 Sys_params_bus_info = Simulink.Bus.createObject(system_params);
 oldName = Sys_params_bus_info.busName;
 busObj = evalin('base', oldName);
@@ -42,6 +43,6 @@ T_stop = 100; % seconds
 t = 0:dt:T_stop;
 x_s = zeros(length(t), 6); % N×nx matrix
 set_point_zero = timeseries(x_s, t); % For easy debugging
-%x_s(:,1) = angle*pi/180 * ones(length(t), 1); % N×nx matrix
-x_s(:,3) = angle*pi/180 * sin((2*pi/Tau)*t);
+x_s(:,2) = angle*pi/180 * ones(length(t), 1); % N×nx matrix
+%x_s(:,3) = angle*pi/180 * sin((2*pi/Tau)*t);
 set_point = timeseries(x_s, t);

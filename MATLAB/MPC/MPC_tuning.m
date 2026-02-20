@@ -5,6 +5,7 @@ M = 20;                    % Control horizon
 x0_mpc = zeros(nx_mpc,1); % Initial states
 z = zeros();
 algorithm = 'active-set';
+useAllEstimates = true;
 
 % Lower bounds
 lbA = -0.1;
@@ -29,6 +30,9 @@ ubu = ones(nu_mpc*N,1)*2500;
 ub = [ubx; ubu];
 
 % Tune cost function
+angleWeights = 100;
+angelRateWeights = 100;
+
 Q = eye(nx_mpc)*100;
 R = eye(nu_mpc)*1;
 H = blkdiag(diag_repeat(Q,N),diag_repeat(R,N));
@@ -45,6 +49,7 @@ MPC_settings.H = H;
 MPC_settings.f = f;
 
 % Create bus object for simulink
+evalin('base', ['clear ' 'MPCBus']);
 MPC_bus_info = Simulink.Bus.createObject(MPC_settings);
 oldName = MPC_bus_info.busName;
 busObj = evalin('base', oldName);
@@ -54,17 +59,26 @@ assignin('base', 'MPCBus', busObj);
 evalin('base', ['clear ' oldName]);
 
 % MPC Controller object init
-% MV = Manipulated variable (u), OV = OutputVariable (y) frå Cx + Du
-Ad_init = eye(nx_mpc);
-Bd_init = [zeros(nx_mpc,nu_mpc)];
-Cd = [eye(3), zeros(3,size(Ad_init,1)-3)];
+%MV = Manipulated variable (u), OV = OutputVariable (y) frå Cx + Du
+Ad_init = eye(nx_mpc) - 0.1*eye(nx_mpc);
+Bd_init = eye(nx_mpc, nu_mpc);
+if useAllEstimates 
+    Cd = [eye(nx_mpc-1), zeros(nx_mpc-1,1)];
+    outputWeights = [ones(1,3)*angleWeights, ones(1,3)*angelRateWeights];
+else
+    Cd = [eye(3), zeros(3,size(Ad_init,1)-3)];
+    outputWeights = ones(1,3)*100;
+end
 Dd = zeros(size(Cd,1), size(Bd_init,2));
 model_init = ss(Ad_init, Bd_init, Cd, Dd, dt);
+
+%model_init = generate_random_system(nx_mpc, nu_mpc, dt);
+
 MPC_controller = mpc(model_init, dt, N, M);
-MPC_controller.Weights.OutputVariables = ones(1,3)*1000; %  [angle weight]
-% Visst ej vil penilize angle rates også, må C endrast til eye(6)...
+MPC_controller.Weights.OutputVariables = outputWeights;
 MPC_controller.Weights.ManipulatedVariables = [ones(1,nu_mpc)];
 MPC_controller.Weights.ManipulatedVariablesRate = [ones(1,nu_mpc)];
+
 for i = 1:nu_mpc
     MPC_controller.MV(i).Min = lbu(i);
     MPC_controller.MV(i).Max = ubu(i);
@@ -74,4 +88,6 @@ for i = 1:3
     MPC_controller.OV(i).Min = lbx(i);
     MPC_controller.OV(i).Max = ubx(i);
 end
-setEstimator(MPC_controller,'custom');
+%setoutdist(MPC_controller,'integrators');
+setEstimator(MPC_controller,'custom')
+%MPC_controller.Model.Plant = minreal(MPC_controller.Model.Plant);
