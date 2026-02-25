@@ -10,7 +10,7 @@ algorithm = 'active-set';
 useAllEstimates = true;
 
 % Lower bounds
-lbA = -0.1;
+lbA = -pi/2;
 lbB = -pi/2;
 lbC = -pi/2;
 lbAdot = -99999;
@@ -28,12 +28,22 @@ ubAdot = 99999;
 ubBdot = 99999;
 ubCdot = 99999;
 ubx = repmat([ubA;ubB;ubC;ubAdot;ubBdot;ubCdot], [N,1]);
-ubu = ones(nu_mpc*N,1)*2500;
+ubu = ones(nu_mpc*N,1)*2.5;
 ub = [ubx; ubu];
 
 % Tune cost function
-angleWeights = 100;
+angleWeights = 1000;
+AWeight = angleWeights;
+BWeight = angleWeights;
+CWeight = angleWeights;
+%CWeight = 1;
 angelRateWeights = 100;
+ARateWeight = angelRateWeights;
+BRateWeight = angelRateWeights;
+CRateWeight = angelRateWeights;
+%CRateWeight = 2;
+inputWeights = 0.1;
+inputRateWeights = 0;
 
 Q = eye(nx_mpc)*100;
 R = eye(nu_mpc)*1;
@@ -66,20 +76,20 @@ Ad_init = eye(nx_tot) - 0.1*eye(nx_tot);
 Bd_init = eye(nx_tot, nu_mpc);
 if useAllEstimates 
     Cd = [eye(nx_mpc-1), zeros(nx_mpc-1,size(Ad_init,1)-nx_mpc+1)];
-    outputWeights = [ones(1,3)*angleWeights, ones(1,3)*angelRateWeights];
+    outputWeights = [AWeight, BWeight, CWeight, ARateWeight, BRateWeight, CRateWeight];
 else
     Cd = [eye(3), zeros(3,size(Ad_init,1)-3)];
     outputWeights = ones(1,3)*100;
 end
 Dd = zeros(size(Cd,1), size(Bd_init,2));
-model_init = ss(Ad_init, Bd_init, Cd, Dd, dt);
+model_initial = ss(Ad_init, Bd_init, Cd, Dd, dt);
 
 %model_init = generate_random_system(nx_mpc, nu_mpc, dt);
 
-MPC_controller = mpc(model_init, dt, N, M);
+MPC_controller = mpc(model_initial, dt, N, M);
 MPC_controller.Weights.OutputVariables = outputWeights;
-MPC_controller.Weights.ManipulatedVariables = [ones(1,nu_mpc)];
-MPC_controller.Weights.ManipulatedVariablesRate = [ones(1,nu_mpc)];
+MPC_controller.Weights.ManipulatedVariables = ones(1,nu_mpc)*inputWeights;
+MPC_controller.Weights.ManipulatedVariablesRate = ones(1,nu_mpc)*inputRateWeights;
 
 for i = 1:nu_mpc
     MPC_controller.MV(i).Min = lbu(i);

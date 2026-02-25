@@ -7,8 +7,10 @@ x0_EKF = zeros(nx_hat,1);
 
 % Parameters
 sigma_angles = 100;
-sigma_anglerates = 100;
-sigma_disturbance = 1000;  % Change to 0 to remove disturbance
+sigma_anglerates = 10000;
+%sigma_disturbance = 1e3;  % Change to 0 to remove disturbance
+%sigma_disturbance = 1;
+sigma_disturbance = 0;
 Qx_kf = blkdiag(eye(3)*sigma_angles, eye(3)*sigma_anglerates);
 Qd_kf = eye(nd_EKF)*sigma_disturbance;
 Q_kf = blkdiag(Qx_kf, Qd_kf);
