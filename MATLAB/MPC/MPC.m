@@ -1,8 +1,8 @@
-function u = MPC(Ai, Bi, xi, x_sp, MPC_settings, options)
+function u = MPC(Ai, Bi, xi, MPC_settings, options)
 %function u = MPC(Ai, Bi, xi, x_sp, MPC_settings)
 H = MPC_settings.H;
-lb = MPC_settings.lb;
-ub = MPC_settings.ub;
+lb = MPC_settings.lb_affine;
+ub = MPC_settings.ub_affine;
 N = MPC_settings.N;
 nx = MPC_settings.nx;
 nu = MPC_settings.nu;
@@ -19,12 +19,13 @@ z0 = [xi;zeros((N-1)*nx + N*nu,1)];
 % end
 % u = z(nx*N+1 : nx*N + nu);
 
-z_sp = repmat([x_sp;zeros(3,1);zeros(nu,1)], [N,1]);
+%z_sp = repmat([x_sp;zeros(3,1);zeros(nu,1)], [N,1]);
 
-fun = @(z) 0.5*(z_sp - z)'*H*(z_sp - z);
+%fun = @(z) 0.5*(z_sp - z)'*H*(z_sp - z);
 
+z = quadprog(H,[],[],[],Aeq,beq,lb,ub,z0,options);
 %if nargin < 5
-    z = fmincon(fun,z0,[],[],Aeq,beq,lb,ub,[],options);
+%    z = fmincon(fun,z0,[],[],Aeq,beq,lb,ub,[],options);
 %else
 %    z = fmincon(fun, z0, [], [], Aeq, beq, lb, ub, [], options);
 %end
