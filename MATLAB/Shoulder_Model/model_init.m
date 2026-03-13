@@ -40,16 +40,16 @@ q0 = [0; 0; 0];
 qdot0 = [0;0;0];
 
 % Dummy controller inputs
-angle = 20; % In degrees 
+angle = 50; % In degrees 
 Tau = 10; % 1/f
 T_stop = 100; % seconds
 t = 0:dt:T_stop;
 x_s = zeros(length(t), 6); % N×nx matrix
 set_point_zero = timeseries(x_s, t); % For easy debugging
 x_s(:,2) = angle*pi/180 * ones(length(t), 1); % N×nx matrix
-x_s(200:end,2) = (angle+5)*pi/180 * ones(length(200:size(t,2)), 1); % N×nx matrix
-x_s(400:end,2) = (angle+10)*pi/180 * ones(length(400:size(t,2)), 1); % N×nx matrix
-x_s(800:end,2) = (angle+15)*pi/180 * ones(length(800:size(t,2)), 1); % N×nx matrix
-x_s(1200:end,2) = (angle+20)*pi/180 * ones(length(1200:size(t,2)), 1); % N×nx matrix
+%x_s(200:end,2) = (angle+5)*pi/180 * ones(length(200:size(t,2)), 1); % N×nx matrix
+%x_s(400:end,2) = (angle+10)*pi/180 * ones(length(400:size(t,2)), 1); % N×nx matrix
+%x_s(800:end,2) = (angle+15)*pi/180 * ones(length(800:size(t,2)), 1); % N×nx matrix
+%x_s(1200:end,2) = (angle+20)*pi/180 * ones(length(1200:size(t,2)), 1); % N×nx matrix
 %x_s(:,3) = angle*pi/180 * sin((2*pi/Tau)*t);
 set_point = timeseries(x_s, t);
