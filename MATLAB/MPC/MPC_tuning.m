@@ -51,7 +51,7 @@ BRateWeight = angelRateWeights;
 CRateWeight = angelRateWeights;
 %CRateWeight = 20;
 inputWeights = 1;
-inputRateWeights = 20;
+inputRateWeights = 10;
 
 Q = eye(nx_mpc)*100;
 R = eye(nu_mpc)*1;
