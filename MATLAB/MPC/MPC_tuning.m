@@ -3,7 +3,7 @@ nd_mpc = nd_EKF;
 nx_tot = nx_mpc+nd_mpc;
 nu_mpc=nu_EKF;
 N = 64;                   % Time steps
-M = 20;                    % Control horizon
+M = 10;                   % Control horizon
 x0_mpc = zeros(nx_mpc,1); % Initial states
 z = zeros();
 algorithm = 'active-set';
@@ -16,9 +16,12 @@ lbC = -pi/2;
 lbAdot = -99999;
 lbBdot = -99999;
 lbCdot = -99999;
+lbx_affine = -99999;
 lbx = repmat([lbA;lbB;lbC;lbAdot;lbBdot;lbCdot], [N,1]);
+lbx_affine = repmat([lbA;lbB;lbC;lbAdot;lbBdot;lbCdot;lbx_affine], [N,1]);
 lbu = zeros(nu_mpc*N,1);
 lb = [lbx; lbu];
+lbAffine = [lbx_affine; lbu];
 
 % Upper bounds
 ubA = pi/2;
@@ -27,23 +30,28 @@ ubC = pi/2;
 ubAdot = 99999;
 ubBdot = 99999;
 ubCdot = 99999;
+ubxAffine = 99999;
 ubx = repmat([ubA;ubB;ubC;ubAdot;ubBdot;ubCdot], [N,1]);
+ubx_affine = repmat([ubA;ubB;ubC;ubAdot;ubBdot;ubCdot;ubxAffine], [N,1]);
 ubu = ones(nu_mpc*N,1)*2.5;
 ub = [ubx; ubu];
+ubAffine = [ubx_affine; ubu];
 
 % Tune cost function
-angleWeights = 1000;
+% Bra for B og C: AW(20), ARW(1), IW(1), IRW(10)
+% Bra for B med "hopping" ARW(4)
+angleWeights = 20; 
 AWeight = angleWeights;
 BWeight = angleWeights;
 CWeight = angleWeights;
-%CWeight = 1;
-angelRateWeights = 100;
+%CWeight = 20;
+angelRateWeights = 8;
 ARateWeight = angelRateWeights;
 BRateWeight = angelRateWeights;
 CRateWeight = angelRateWeights;
-%CRateWeight = 2;
-inputWeights = 0.1;
-inputRateWeights = 0;
+%CRateWeight = 20;
+inputWeights = 1;
+inputRateWeights = 20;
 
 Q = eye(nx_mpc)*100;
 R = eye(nu_mpc)*1;
@@ -51,12 +59,16 @@ H = blkdiag(diag_repeat(Q,N),diag_repeat(R,N));
 
 f = zeros(size(H,1),1);
 
+%[custom_lb, custom_up] = gen_constraints(lb, ub, nx, nu, N);
+
 % Create object
 MPC_settings.N = N;
 MPC_settings.nx = nx_mpc;
 MPC_settings.nu = nu_mpc;
 MPC_settings.lb = lb;
 MPC_settings.ub = ub;
+MPC_settings.lb_affine = lbAffine;
+MPC_settings.ub_affine = ubAffine;
 MPC_settings.H = H;
 MPC_settings.f = f;
 
@@ -91,6 +103,7 @@ MPC_controller.Weights.OutputVariables = outputWeights;
 MPC_controller.Weights.ManipulatedVariables = ones(1,nu_mpc)*inputWeights;
 MPC_controller.Weights.ManipulatedVariablesRate = ones(1,nu_mpc)*inputRateWeights;
 
+
 for i = 1:nu_mpc
     MPC_controller.MV(i).Min = lbu(i);
     MPC_controller.MV(i).Max = ubu(i);
@@ -100,6 +113,10 @@ for i = 1:3
     MPC_controller.OV(i).Min = lbx(i);
     MPC_controller.OV(i).Max = ubx(i);
 end
-%setoutdist(MPC_controller,'integrators');
 setEstimator(MPC_controller,'custom')
-%MPC_controller.Model.Plant = minreal(MPC_controller.Model.Plant);
+%distMod = getoutdist(MPC_controller);
+%distMod = sminreal([distMod(1,1) distMod(1,6); 0 0; distMod(3,1) distMod(3,6); distMod(4,1) distMod(4,6);distMod(5,1) distMod(5,6);distMod(6,1) distMod(6,6)]);
+%setoutdist(MPC_controller,'model',distMod)
+% Assuming your MPC object is named 'mpcobj'
+% Sets disturbance to zero for all output channels
+setoutdist(MPC_controller, 'model', tf(zeros(6,1))); 
