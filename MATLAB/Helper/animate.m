@@ -7,6 +7,9 @@ t_sim = out.tout;                    % Nx1
 theta = data.Data(1,1,:);         % radians (θ about x)
 phi   = data.Data(2,1,:);         % radians (φ about y)
 psi   = data.Data(3,1,:);         % radians (ψ about z)
+%theta = data.Data(:,1);
+%phi = data.Data(:,2);
+%psi = data.Data(:,3);
 
 % If your angles are in degrees, set this true:
 angles_are_degrees = false;
@@ -14,8 +17,8 @@ angles_are_degrees = false;
 % Choose rotation convention:
 % 'intrinsicXYZ'  -> rotate about body x, then body y, then body z (most common for "x, y, z in that order")
 % 'extrinsicXYZ'  -> rotate about world X, then world Y, then world Z
-%order = 'intrinsicXYZ';
-order = 'extrinsicXYZ';
+order = 'intrinsicXYZ';
+%order = 'extrinsicXYZ';
 
 % Axis length and playback speed
 axis_len = 1.0;
