@@ -2,12 +2,13 @@ nx_mpc = nx_EKF+1; % Add affine term
 nd_mpc = nd_EKF;
 nx_tot = nx_mpc+nd_mpc;
 nu_mpc=nu_EKF;
-N = 64;                   % Time steps
+N = 128;                   % Time steps
 M = 10;                   % Control horizon
 x0_mpc = zeros(nx_mpc,1); % Initial states
 z = zeros();
 algorithm = 'active-set';
 useAllEstimates = true;
+u0_mpc = zeros(nu_mpc,1);
 
 % Lower bounds
 lbA = -pi/2;
@@ -19,7 +20,8 @@ lbCdot = -99999;
 lbx_affine = -99999;
 lbx = repmat([lbA;lbB;lbC;lbAdot;lbBdot;lbCdot], [N,1]);
 lbx_affine = repmat([lbA;lbB;lbC;lbAdot;lbBdot;lbCdot;lbx_affine], [N,1]);
-lbu = zeros(nu_mpc*N,1);
+%lbu = zeros(nu_mpc*N,1);
+lbu = -ones(nu_mpc*N,1)*2500;
 lb = [lbx; lbu];
 lbAffine = [lbx_affine; lbu];
 
@@ -33,14 +35,24 @@ ubCdot = 99999;
 ubxAffine = 99999;
 ubx = repmat([ubA;ubB;ubC;ubAdot;ubBdot;ubCdot], [N,1]);
 ubx_affine = repmat([ubA;ubB;ubC;ubAdot;ubBdot;ubCdot;ubxAffine], [N,1]);
-ubu = ones(nu_mpc*N,1)*2.5;
+ubu = ones(nu_mpc*N,1)*2500;
 ub = [ubx; ubu];
 ubAffine = [ubx_affine; ubu];
 
 % Tune cost function
+% 64 N uten demping:
 % Bra for B og C: AW(20), ARW(1), IW(1), IRW(10)
 % Bra for B med "hopping" ARW(4)
-angleWeights = 20; 
+% Bra for A: AW(100), ARW(32), IW(1), IRW(10)
+
+% 64N med demping:
+% Bra for C: AW(20), ARW(1), IW(1), IRW(10)
+% Bra for B: AW(27), ARW(6), IW(1), IRW(10)
+
+% Bra med tension model (N = 128): 
+% AW(17), ARW(8), IW(1), IRW(10)
+
+angleWeights = 17; 
 AWeight = angleWeights;
 BWeight = angleWeights;
 CWeight = angleWeights;
@@ -59,7 +71,7 @@ H = blkdiag(diag_repeat(Q,N),diag_repeat(R,N));
 
 f = zeros(size(H,1),1);
 
-%[custom_lb, custom_up] = gen_constraints(lb, ub, nx, nu, N);
+%[custom_lb, custom_ub] = gen_constraints(lb, ub, nx, nu, N);
 
 % Create object
 MPC_settings.N = N;
@@ -120,3 +132,12 @@ setEstimator(MPC_controller,'custom')
 % Assuming your MPC object is named 'mpcobj'
 % Sets disturbance to zero for all output channels
 setoutdist(MPC_controller, 'model', tf(zeros(6,1))); 
+
+% Non linear MPC:
+NL_mpc = nlmpc(nx_mpc, 6, nu_mpc);
+NL_mpc.Model.StateFcn = @(x,u) system_model_continous(x,u,system_params);
+NL_mpc.Jacobian.StateFcn = @(x,u) linearize(x,u,system_params);
+NL_mpc.Model.OutputFcn = @(x) Cd*x;
+NL_mpc.Weights.OutputVariables = outputWeights;
+NL_mpc.Weights.ManipulatedVariables = ones(1,nu_mpc)*inputWeights;
+NL_mpc.Weights.ManipulatedVariablesRate = ones(1,nu_mpc)*inputRateWeights;

@@ -53,5 +53,32 @@ elseif matches(pos_param, 'Fusion')
     
     system_params.cables.ALR.L = [-0.002; -0.0268; 0.001]; % anterior lower rotator cuff lateral connection
     system_params.cables.ALR.M = [0.1288; -0.033; -0.117]; % anterior lower rotator cuff medial connection
+
+elseif matches(pos_param, 'Fusion2')
+
+    % Position of insertion points, lateral and medial
+    system_params.cables.FD.L = [-0.0172; -0.0171; -0.119]; % Front deltoid lateral connection
+    system_params.cables.FD.M = [-7.052; -63.84; 32.91]/1000; % Front deltoid medial connection
+        
+    system_params.cables.LD.L = [-0.0172; -0.0171; -0.119]; % Lateral deltoid lateral connection
+    %LD.M = [-0.0038; 0.0049; 0.0632]; % Lateral deltoid medial connection
+    system_params.cables.LD.M = [-35.052; 6.204; 74.98]/1000;
+    
+    system_params.cables.RD.L = [-0.0172; -0.0171; -0.119]; % Rear deltoid lateral connection
+    system_params.cables.RD.M = [-7.052; 68.364; 30.149]/1000; % Rear deltoid medial connection
+    
+    %PUR.L = [-0.0083; 0.0182; -0.0015]; % posterior upper rotator cuff lateral connection
+    system_params.cables.PUR.L = [-0.002; 0.0268; 0.001];
+    system_params.cables.PUR.M = [0.1288; 0.0501; -0.0243]; % posterior upper rotator cuff medial connection
+    
+    system_params.cables.PLR.L = [-0.0083; 0.0182; -0.0015]; % posterior lower rotator cuff lateral connection
+    system_params.cables.PLR.M = [0.1288; 0.0501; -0.117]; % posterior lower rotator cuff medial connection
+    
+    system_params.cables.AUR.L = [-0.002; -0.0268; 0.001]; % anterior upper rotator cuff lateral connection
+    system_params.cables.AUR.M = [0.1288; -0.033; -0.0271]; % anterior upper rotator cuff medial connection
+    
+    system_params.cables.ALR.L = [-0.002; -0.0268; 0.001]; % anterior lower rotator cuff lateral connection
+    system_params.cables.ALR.M = [0.1288; -0.033; -0.117]; % anterior lower rotator cuff medial connection
+
 end
 

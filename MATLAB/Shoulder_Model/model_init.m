@@ -4,6 +4,18 @@ system_params.L_h = 1; % Arm length in meters
 system_params.R = 0.1; % Cylinder radius in meters (Arm model)
 system_params.g = 9.81; % m/s^2
 system_params.dt = 0.01;
+d1 = 1; d2 = 1; d3 = 1;
+system_params.D = diag([d1, d2, d3]*2);
+%system_params.cable_spring_coefficient = 10;
+%system_params.cable_damping_coefficient = 0.1;
+% Good for one angle at the time: 50k, 0.1
+%system_params.cable_spring_coefficient = 500000;
+%system_params.cable_spring_coefficient = 50000; % Bra med b MPC
+system_params.cable_spring_coefficient = 0;
+system_params.cable_damping_coefficient = 0;
+%system_params.cable_spring_coefficient = 300000; % Bra med a dc
+%system_params.cable_damping_coefficient = 5100;
+
 
 % Save space
 m = system_params.m;
@@ -14,16 +26,23 @@ dt = system_params.dt;
 system_params.W = diag([m*L_h^2 / 3;m*L_h^2 / 3; m*R_h^2 / 2]);
 W_inv = inv(system_params.W);
 
-% Scale u to kN for MPC
-system_params.K1 = 1000;
+% Scale u to optimize controller
+system_params.K1 = 100;
 
 % Get position parameters
-% pos_param = 'GPT';
-pos_param = 'Fusion';
+%pos_param = 'GPT';
+%pos_param = 'Fusion';
+pos_param = 'Fusion2';
 pos_init;
 
 % Get alphas for lower/upper rotator cuff ratio control
 alphas_init;
+
+% Initial conditions
+q0 = [0; pi/2-0.01; 0];
+qdot0 = [0;0;0];
+u0 = u0_calc(q0, system_params);
+system_params.u0 = u0;
 
 % Create bus object for Simulink
 evalin('base', ['clear ' 'System_params_bus']);
@@ -35,20 +54,16 @@ assignin('base', 'System_params_bus', busObj);
 evalin('base', ['clear ' oldName]);
 
 
-% Initial conditions
-q0 = [0; 0; 0];
-qdot0 = [0;0;0];
-
 % Dummy controller inputs
-angle = 50; % In degrees 
+angle = 10; % In degrees 
 Tau = 10; % 1/f
 T_stop = 100; % seconds
 t = 0:dt:T_stop;
 x_s = zeros(length(t), 6); % N×nx matrix
 set_point_zero = timeseries(x_s, t); % For easy debugging
-x_s(:,2) = angle*pi/180 * ones(length(t), 1); % N×nx matrix
-%x_s(200:end,2) = (angle+5)*pi/180 * ones(length(200:size(t,2)), 1); % N×nx matrix
-%x_s(400:end,2) = (angle+10)*pi/180 * ones(length(400:size(t,2)), 1); % N×nx matrix
+x_s(:,1) = angle*pi/180 * ones(length(t), 1); % N×nx matrix
+%x_s(600:end,2) = (angle+10)*pi/180 * ones(length(600:size(t,2)), 1); % N×nx matrix
+%x_s(900:end,2) = (angle+20)*pi/180 * ones(length(900:size(t,2)), 1); % N×nx matrix
 %x_s(800:end,2) = (angle+15)*pi/180 * ones(length(800:size(t,2)), 1); % N×nx matrix
 %x_s(1200:end,2) = (angle+20)*pi/180 * ones(length(1200:size(t,2)), 1); % N×nx matrix
 %x_s(:,3) = angle*pi/180 * sin((2*pi/Tau)*t);

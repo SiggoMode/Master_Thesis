@@ -1,4 +1,4 @@
-function [x_pred, z_pred, P_pred, Ad_hat, Bd_hat, c] = EKF_pred(x_prev,P_prev, u_k, EKF_settings ,system_params)
+function [x_pred, z_pred, P_pred, Ad_hat, Bd_hat, c] = EKF_pred(x_prev,P_prev, u_k, u_kp1, EKF_settings ,system_params)
 nx = EKF_settings.nx;
 nd = EKF_settings.nd;
 nu = EKF_settings.nu;
@@ -9,8 +9,8 @@ Ts = system_params.dt;
 
 
 % Predict and linearize
-x_pred = runge_kutta4(x, u_k, Ts, system_params); % Kanskje fjern Ts her og hent frå system_params om vi har tid.
-[Ad_x, Bd_x, c] = linearize(x, u_k, system_params);
+x_pred = runge_kutta4(x, u_k, u_kp1, Ts, system_params); % Kanskje fjern Ts her og hent frå system_params om vi har tid.
+[Ad_x, Bd_x, c] = linearize(x, u_k, u_kp1, system_params);
 
 % Add disturbance terms
 x_pred = [x_pred;d];
