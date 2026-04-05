@@ -3,8 +3,8 @@ angleA_old = 0;
 angleB_old = 0;
 angleC_old = 0;
 
-angleA_new = 0;
-angleB_new = 60;
+angleA_new = 60;
+angleB_new = 0;
 angleC_new = 0;
 
 a = 1/2; % 1 degree per 2 timesteps

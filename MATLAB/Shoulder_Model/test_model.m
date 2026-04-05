@@ -29,3 +29,20 @@ drdq_test = @(A,B,C) [0; cos(C)*sin(B)*cos(A) + sin(C)*sin(A) + sin(C)*sin(B)*co
 drdq_test(0,1,0);
 
 drdq_A = Rot_mat(q0) * system_params.cables.FD.L;
+
+%% Test quaternion model
+
+q0_test = euler_to_quaternion([0,0,0]);
+qdot0_test = zeros(4,1);
+
+system_model_quarternions(q0_test, qdot0_test, system_params)
+
+%% Test Tau_tension_calc
+theta_test = [0;0.9;0];
+q_test = euler_to_quaternion(theta_test);
+theta_displacement = [0;1;0];
+u0_test = u0_calc(theta_displacement, system_params);
+udot_test = zeros(7,1);
+omega = zeros(3,1);
+
+Tau_tension_calc(u0_test, udot_test, q_test, omega, system_params)

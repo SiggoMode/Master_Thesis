@@ -5,16 +5,20 @@ system_params.R = 0.1; % Cylinder radius in meters (Arm model)
 system_params.g = 9.81; % m/s^2
 system_params.dt = 0.01;
 d1 = 1; d2 = 1; d3 = 1;
-system_params.D = diag([d1, d2, d3]*2);
+system_params.D = diag([d1, d2, d3]*0); % Friction removed
+%system_params.D = diag([d1, d2, d3]*2);
 %system_params.cable_spring_coefficient = 10;
 %system_params.cable_damping_coefficient = 0.1;
 % Good for one angle at the time: 50k, 0.1
 %system_params.cable_spring_coefficient = 500000;
 %system_params.cable_spring_coefficient = 50000; % Bra med b MPC
-system_params.cable_spring_coefficient = 0;
-system_params.cable_damping_coefficient = 0;
+system_params.cable_spring_coefficient = 500000;
+system_params.cable_damping_coefficient = 10;
 %system_params.cable_spring_coefficient = 300000; % Bra med a dc
 %system_params.cable_damping_coefficient = 5100;
+
+system_params.cable_spring_coefficient = 50000; % Bra med begge vinkla (quaternions)
+system_params.cable_damping_coefficient = 10000;
 
 
 % Save space
@@ -24,25 +28,32 @@ R_h = system_params.R;
 dt = system_params.dt;
 
 system_params.W = diag([m*L_h^2 / 3;m*L_h^2 / 3; m*R_h^2 / 2]);
+system_params.I = diag([m*L_h^2 / 3;m*L_h^2 / 3; m*R_h^2 / 2]);
 W_inv = inv(system_params.W);
 
 % Scale u to optimize controller
-system_params.K1 = 100;
+system_params.K1 = 1;
 
 % Get position parameters
 %pos_param = 'GPT';
 %pos_param = 'Fusion';
-pos_param = 'Fusion2';
+pos_param = 'FinalBuild';
 pos_init;
 
 % Get alphas for lower/upper rotator cuff ratio control
 alphas_init;
 
 % Initial conditions
-q0 = [0; pi/2-0.01; 0];
+q0 = [1; 0; 0];
 qdot0 = [0;0;0];
 u0 = u0_calc(q0, system_params);
 system_params.u0 = u0;
+
+% Quaternions init:
+q0_quat = euler_to_quaternion(q0);
+qdot0_quat = zeros(4,1);
+omega0 = qdot0;
+
 
 % Create bus object for Simulink
 evalin('base', ['clear ' 'System_params_bus']);
