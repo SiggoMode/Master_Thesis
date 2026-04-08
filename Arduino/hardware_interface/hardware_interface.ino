@@ -33,23 +33,23 @@ Posterior Lower Rotator
 
 */
 
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2)
+//LiquidCrystal lcd(12, 11, 5, 4, 3, 2)
 const int switchPin = 6;
 int reply;
 
 // System parameters
 const int N_ACTUATORS = 7;
-const float KP[N_ACTUATORS] = {1, 0, 0, 0, 0, 0, 0};
+const float KP[N_ACTUATORS] = {1, 1, 0.5, 4, 4, 4, 0.5};
 const float KI[N_ACTUATORS] = {0};
 const float KD[N_ACTUATORS] = {0};
 float i_contributions[N_ACTUATORS] = {0};
 float prev_errors[N_ACTUATORS] = {0};
 float previous_errors[N_ACTUATORS] = {0};
 float dt = 0.01;
-unsigned long dt_millis = 1000; //milliseconds
+unsigned long dt_millis = 100; //milliseconds
 unsigned long prev_time = millis();
-float set_values[N_ACTUATORS] = {50, 100, 100, 100, 100, 100, 100};
-float u[N_ACTUATORS] = {0};
+float set_values[N_ACTUATORS] = {60, 70, 60, 60, 50, 55, 80};
+float u[N_ACTUATORS] = {64};
 #define u_saturation_l 0
 #define u_saturation_u 127
 #define u_bias 64
@@ -81,13 +81,16 @@ HX711 scale7;
 // Range sensors
 Adafruit_VL53L0X lox[N_ACTUATORS] = Adafruit_VL53L0X();
 //const int XSHUT[6] = {2,3,4,5,6,7};
-//const int XSHUT[3] = {49,51,53};
-const int XSHUT[1] = {49};
-const byte TOF_ADDRESSES[6] = {0x35, 0x34, 0x33, 0x32, 0x31, 0x30};
+const int XSHUT[7] = {41,43,45,47,49,51,53};
+//const int XSHUT[1] = {49};
+const byte TOF_ADDRESSES[7] = {0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x30};
 const int DISTANCE_SENSOR_N = sizeof(XSHUT) / sizeof(XSHUT[0]);
 const float FIR_COEFFS[5] = { 0.028, 0.237, 0.470, 0.237, 0.028 };
 const int FIR_N = sizeof(FIR_COEFFS) / sizeof(FIR_COEFFS[0]);
-float buffer[3][5] = {0};
+float buffer[7][5] = {0};
+int matchCount[N_ACTUATORS-1] = {0};
+
+#define MATCH_THRESHOLD 4
 
 
 int Load_Cell_Value[N_ACTUATORS];
@@ -107,17 +110,18 @@ void setup() {
     delay(1);
   }
 
+/*
   lcd.begin(16,2);
   lcd.print("Ask the");
   lcd.setCursor(0,1);
   lcd.print("Crystal Ball!");
+*/
 
-/*
-  roboclaw.begin(38400); // Open coboclaw serial ports
+  roboclaw.begin(38400); // Open roboclaw serial ports
   for (int i = 0; i < END_SWITCH_N; i++) {
     pinMode(END_SWITCH[i], INPUT);
   }
-
+/*
 
   scale1.begin(DOUT1, CLK1);
   scale2.begin(DOUT2, CLK2);
@@ -137,33 +141,19 @@ void setup() {
  scale7.set_scale(14);
    
    offset[0] = 1015;
-   boot_TOF_sensors();
 
    pinMode(23, OUTPUT);
    */
+   
+   boot_TOF_sensors();
 }
 
 void loop() {
   prev_time = millis();
 
-  serialEvent();
-  parseData(simulink_string);
-  if (set_values[0] == 120) {
-    digitalWrite(23, HIGH);
-  } else {
-    digitalWrite(23, LOW);
-  }
-
-  for (int i=0;i<N_ACTUATORS;i++) {
-    Serial.print("Input ");
-    Serial.print(i+1);
-    Serial.print(": ");
-    Serial.println(set_values[i]);
-  }
-
-  /*
   if(Serial.available()) { // Check for incoming stop signal
     char incoming_byte = Serial.read();
+    Serial.print(incoming_byte);
     if ((char)incoming_byte == ' ') {
       Serial.println("Stop signal received ");
       stopAll = true;
@@ -181,17 +171,30 @@ void loop() {
       dir = 0;
     }
   }
+
+  //serialEvent();
+  //parseData(simulink_string);
+
+  /*
+  for (int i=0;i<N_ACTUATORS;i++) {
+    Serial.print("Input ");
+    Serial.print(i+1);
+    Serial.print(": ");
+    Serial.println(set_values[i]);
+  }
   */
+  
 
 
   VL53L0X_RangingMeasurementData_t measure;
   float tof_sensor_meas[DISTANCE_SENSOR_N] = {0};
-  /*
+  float previous_measurement = 0.0;
+  
   for (int i = 0; i<DISTANCE_SENSOR_N; i++) {
-    Serial.print("Sensor reading ");
-    Serial.print(i+1);
-    Serial.print(": ");
-    
+    //Serial.print("Sensor reading ");
+    //Serial.print(i+1);
+    //Serial.print(": ");
+    if (lox[i].timeoutOccurred()) { boot_TOF_sensors(); }
     lox[i].rangingTest(&measure, false);
 
     if (measure.RangeStatus != 4) {  // phase failures have incorrect data
@@ -199,13 +202,15 @@ void loop() {
       } else {
       Serial.println(" out of range ");
     }
+
   }
   
   updateBuffer(tof_sensor_meas);
   float tof_FIR_filtered[DISTANCE_SENSOR_N] = {0};
+  checkForMirroring();
   firFilter(tof_FIR_filtered);
-  */
-  /*
+  
+  
   for (int i = 0; i<DISTANCE_SENSOR_N; i++) {
     Serial.print("Filtered distance sensor");
     Serial.print(i+1);
@@ -213,9 +218,11 @@ void loop() {
     Serial.println(tof_FIR_filtered[i]);
   }
 
-  int actuator = 0;
-  testPid(tof_FIR_filtered, actuator);
+  
 
+  int actuator = 6;
+  testPid(tof_FIR_filtered, actuator);
+/*
   Serial.print("Output from PID: ");
   Serial.println(u[actuator]);
   */
@@ -242,6 +249,11 @@ void loop() {
   if (stopAll) {
     roboclaw.ForwardBackwardM1(address1, 64);
     roboclaw.ForwardBackwardM2(address1, 64);
+    roboclaw.ForwardBackwardM1(address2, 64);
+    roboclaw.ForwardBackwardM2(address2, 64);
+    roboclaw.ForwardBackwardM1(address3, 64);
+    roboclaw.ForwardBackwardM2(address3, 64);
+    roboclaw.ForwardBackwardM1(address4, 64);
   }
    
 
@@ -339,53 +351,78 @@ void boot_TOF_sensors() {
     Serial.print("Connecting to sensor: ");
     Serial.println(i+1);
     
-    /*while(!lox[i].begin(TOF_ADDRESSES[i])) {
+    while(!lox[i].begin(TOF_ADDRESSES[i])) {
       Serial.print(F("Failed to boot Sensor: "));
       Serial.println({i+1});
       delay(1000);
     }
-    */
+    
     delay(10);
   }
 }
 
 
 void steerMotors() {
+  int speed;
+  if (dir == true) {
+    speed = 73;
+  }
+  else {
+    speed = 53;
+  }
+  Serial.print("Speed: ");
+  Serial.println(speed);
   if (stopAll) { 
     for (int i=0;i<N_ACTUATORS;i++) { u[i] = 64; }  // Set all motors to stop (64)
   }
-  roboclaw.ForwardBackwardM1(address1, u[0]);
+  else {
+    /*
+    Front deltoid
+    Middle deltoid
+    Rear deltoid
+    Anterior Upper Rotator
+    Anterior Lower Rotator
+    Posterior Upper Rotator
+    Posterior Lower Rotator
+    */
+
+    //roboclaw.ForwardBackwardM2(address1, speed);
+    roboclaw.ForwardBackwardM2(address3, u[6]);
+    /*
+
+    */
+    /*
+    roboclaw.ForwardBackwardM1(address1, u[0]);
+    roboclaw.ForwardBackwardM2(address1, u[1]);
+    roboclaw.ForwardBackwardM1(address2, u[2]);
+    roboclaw.ForwardBackwardM2(address2, u[3]);
+    roboclaw.ForwardBackwardM1(address3, u[4]);
+    roboclaw.ForwardBackwardM2(address3, u[5]);
+    roboclaw.ForwardBackwardM1(address4, u[6]);
+    */
+  }
+}
+
+
+void serialEvent() {
   /*
-  roboclaw.ForwardBackwardM2(address1, u[1]);
-  roboclaw.ForwardBackwardM1(address2, u[2]);
-  roboclaw.ForwardBackwardM2(address2, u[3]);
-  roboclaw.ForwardBackwardM1(address3, u[4]);
-  roboclaw.ForwardBackwardM2(address3, u[5]);
-  roboclaw.ForwardBackwardM1(address4, u[6]);
+  while (Serial.available() && !string_complete) {
+    Serial.println("E det fremdeles her?");
+    char inChar = (char)Serial.read();
+    bool endline_reached = (inChar == '\n');
+
+    if (endline_reached) { string_complete = true; }
+    else { simulink_string += inChar; }
+
+  }
+  string_complete = false;
   */
 }
 
-
-// GPT GENERATED: 
-void serialEvent() {
-  while (Serial.available() && !string_complete) {
-    char inChar = (char)Serial.read();
-    simulink_string += inChar;
-
-    if (inChar == '\n') {
-      string_complete = true;
-      //Serial.println(simulink_string);
-    }
-  }
-  string_complete = false;
-}
-
 void parseData(String data) {
-  Serial.println(data);
   data.trim();
 
     if (data.startsWith("<") && data.endsWith(">")) {
-    Serial.println("Her no");
 
     data.remove(0, 1);              // remove '<'
     data.remove(data.length()-2);   // remove '>\n'
@@ -398,5 +435,33 @@ void parseData(String data) {
       token = strtok(NULL, ",");
     }
   }
-  //simulink_string = "";
+  simulink_string = "";
+}
+
+
+void checkForMirroring() {
+
+  for (int i = 1; i < N_ACTUATORS; i++) {
+
+    uint16_t valA = buffer[i][0];
+    uint16_t valB = buffer[i - 1][0];
+
+    // Compare with tolerance
+    if (abs((int)valA - (int)valB) < 0.01) {
+      matchCount[i]++;
+    } else {
+      matchCount[i] = 0;
+    }
+
+    // If sensor i looks like sensor i-1 → problem
+    if (matchCount[i] >= MATCH_THRESHOLD) {
+      Serial.print("Sensor ");
+      Serial.print(i);
+      Serial.println(" mirrors previous sensor. Reinitializing...");
+
+      boot_TOF_sensors();
+
+      matchCount[i] = 0;
+    }
+  }
 }

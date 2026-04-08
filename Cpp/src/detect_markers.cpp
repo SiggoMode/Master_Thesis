@@ -2,6 +2,8 @@
 #include <opencv2/objdetect/aruco_detector.hpp>
 #include <iostream>
 #include "aruco_samples_utility.hpp"
+#include <opencv2/imgproc.hpp>
+#include <fstream>
 
 using namespace std;
 using namespace cv;
@@ -108,6 +110,43 @@ int main(int argc, char *argv[]) {
         cv::Mat image, imageCopy;
         inputVideo.retrieve(image);
 
+        // Convert ONCE for thresholding
+        cv::Mat gray;
+        if(image.channels() == 1)
+            gray = image;
+        else
+            cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+
+
+        // === DEBUG: Show all threshold passes ===
+        for(int winSize = detectorParams.adaptiveThreshWinSizeMin;
+            winSize <= detectorParams.adaptiveThreshWinSizeMax;
+            winSize += detectorParams.adaptiveThreshWinSizeStep)
+        {
+            cv::Mat thresh;
+
+            cv::adaptiveThreshold(
+                gray,
+                thresh,
+                255,
+                cv::ADAPTIVE_THRESH_MEAN_C,
+                cv::THRESH_BINARY_INV,
+                winSize,
+                detectorParams.adaptiveThreshConstant
+            );
+
+            // Convert threshold to 3-channel so we can concatenate
+            cv::Mat threshColor;
+            cv::cvtColor(thresh, threshColor, cv::COLOR_GRAY2BGR);
+
+            // Side-by-side with original image
+            cv::Mat combined;
+            cv::hconcat(image, threshColor, combined);
+
+            std::string name = "Image | Thresh (win=" + std::to_string(winSize) + ")";
+            cv::imshow(name, combined);
+        }
+
         double tick = (double)getTickCount();
 
         //! [aruco_pose_estimation3]
@@ -153,6 +192,30 @@ int main(int argc, char *argv[]) {
         imshow("out", imageCopy);
         char key = (char)waitKey(waitTime);
         if(key == 27) break;
+        if(key == 'c' && estimatePose && !ids.empty()) {
+            std::ofstream file("marker_poses.txt", std::ios::app); // append mode
+
+            file << "---- Capture ----" << std::endl;
+
+            for(size_t i = 0; i < ids.size(); i++) {
+                file << "ID: " << ids[i] << std::endl;
+
+                file << "rvec: "
+                    << rvecs[i][0] << ", "
+                    << rvecs[i][1] << ", "
+                    << rvecs[i][2] << std::endl;
+
+                file << "tvec: "
+                    << tvecs[i][0] << ", "
+                    << tvecs[i][1] << ", "
+                    << tvecs[i][2] << std::endl;
+
+                file << std::endl;
+            }
+
+            file.close();
+            std::cout << "Saved marker poses to file." << std::endl;
+        }
     }
     //! [aruco_detect_markers]
     return 0;
