@@ -1,0 +1,27 @@
+%YAML:1.0
+---
+adaptiveThreshWinSizeMin: 5
+adaptiveThreshWinSizeMax: 21
+adaptiveThreshWinSizeStep: 4
+adaptiveThreshConstant: 3.
+minMarkerPerimeterRate: 0.050000000000000003
+maxMarkerPerimeterRate: 4.
+polygonalApproxAccuracyRate: 0.029999999999999999
+minCornerDistanceRate: 0.050000000000000003
+minDistanceToBorder: 3
+minMarkerDistanceRate: 0.125
+cornerRefinementMethod: 0
+cornerRefinementWinSize: 5
+relativeCornerRefinmentWinSize: 0.30000001192092896
+cornerRefinementMaxIterations: 30
+cornerRefinementMinAccuracy: 0.10000000000000001
+markerBorderBits: 1
+perspectiveRemovePixelPerCell: 2
+perspectiveRemoveIgnoredMarginPerCell: 0.13
+maxErroneousBitsInBorderRate: 0.34999999999999998
+minOtsuStdDev: 5.
+errorCorrectionRate: 0.40000000000000002
+minGroupDistance: 0.20999999344348907
+useAruco3Detection: 0
+minSideLengthCanonicalImg: 32
+minMarkerLengthRatioOriginalImg: 0.

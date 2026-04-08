@@ -9,9 +9,9 @@
 #include "aruco_samples_utility.hpp"
 
 
-void sendCoordinates(ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValue<bool>& stopFlag) {
-    QHostAddress targetAddress{"127.0.0.1"}; 
-    quint16 targetPort{8080};
+void sendCoordinates(QHostAddress targetAddress, quint16 targetPort, ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValue<bool>& stopFlag) {
+    //QHostAddress targetAddress{"127.0.0.1"}; 
+    //quint16 targetPort{8080};
     UdpClient udpClient(targetAddress, targetPort);
 
     QByteArray data;
@@ -25,12 +25,14 @@ void sendCoordinates(ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValu
             std::cout << "UDP thread stopped" << std::endl;
             break;
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        
     }
 }
 
 
-void detectPosition(ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValue<bool>& stopFlag) {
-        cv::aruco::DetectorParameters detectorParams;
+void detectPosition(const int camId, const std::string camParamsPath, cv::aruco::DetectorParameters detectorParams, 
+    ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValue<bool>& stopFlag) {
     //detectorParams.readDetectorParameters(dp_fs.root());
     //dp_fs.release();
 
@@ -39,11 +41,10 @@ void detectPosition(ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValue
 
     QByteArray data;
 
-    int camId = 0;
     cv::Mat camMatrix, distCoeffs;
-    cv::FileStorage camParams("camera2.txt", cv::FileStorage::READ);
+    cv::FileStorage camParams(camParamsPath, cv::FileStorage::READ);
     if (!camParams.isOpened()) {
-        std::cerr << "Error: Could not open file " << "camera2.txt" << std::endl;
+        std::cerr << "Error: Could not open file " << camParamsPath << std::endl;
         stopFlag.set(true);
         return;
     }
@@ -56,9 +57,16 @@ void detectPosition(ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValue
     cv::aruco::ArucoDetector detector(dictionary, detectorParams);
     cv::VideoCapture inputVideo;
     inputVideo.open(camId);
-    int waitTime = 10;
 
-    float markerLength = 0.05f;
+    if (!inputVideo.isOpened()) {
+        std::cerr << "Failed to open camera\n";
+        stopFlag.set(true);
+        return;
+    }
+
+    int waitTime = 1;
+
+    float markerLength = 0.033f;
 
     //! [aruco_pose_estimation2]
     // set coordinate system
@@ -68,14 +76,14 @@ void detectPosition(ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValue
     objPoints.ptr<cv::Vec3f>(0)[2] = cv::Vec3f(markerLength/2.f, -markerLength/2.f, 0);
     objPoints.ptr<cv::Vec3f>(0)[3] = cv::Vec3f(-markerLength/2.f, -markerLength/2.f, 0);
 
-
     while(inputVideo.grab()) {
-        cv::Mat image, imageCopy;
+        cv::Mat image;
         inputVideo.retrieve(image);
 
         //! [aruco_pose_estimation3]
         std::vector<int> ids;
-        std::vector<std::vector<cv::Point2f> > corners, rejected;
+        //std::vector<std::vector<cv::Point2f> > corners, rejected;
+        std::vector<std::vector<cv::Point2f> > corners;
 
         detector.detectMarkers(image, corners, ids);
 
@@ -85,24 +93,30 @@ void detectPosition(ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValue
         if (!ids.empty()) {
             // Calculate pose for each marker
             for (size_t i = 0; i < nMarkers; i++) {
-                solvePnP(objPoints, corners.at(i), camMatrix, distCoeffs, rvecs.at(i), tvecs.at(i));
+                cv::solvePnP(objPoints, corners.at(i), camMatrix, distCoeffs, rvecs.at(i), tvecs.at(i));
             }
-        }
 
-        //imshow("out", imageCopy);
-        //char key = (char)cv::waitKey(waitTime);
+            QStringList messages;
 
-        if (!rvecs.empty()) {
-            //std::cout << ids[0] << std::endl;
-            QString msg = QString("A:%1B:%2C:%3")
-                  .arg(rvecs[0][0], 0, 'f', 3)
-                  .arg(rvecs[0][1], 0, 'f', 3)
-                  .arg(rvecs[0][2], 0, 'f', 3);
+            for (size_t i = 0; i < ids.size(); i++) {
+                QString msg = QString("I:%1q:%2r:%3s:%4x:%5y:%6z:%7;")
+                    .arg(ids[i])
+                    .arg(rvecs[i][0], 0, 'f', 3)
+                    .arg(rvecs[i][1], 0, 'f', 3)
+                    .arg(rvecs[i][2], 0, 'f', 3)
+                    .arg(tvecs[i][0], 0, 'f', 3)
+                    .arg(tvecs[i][1], 0, 'f', 3)
+                    .arg(tvecs[i][2], 0, 'f', 3);
+                messages.append(msg);
+            }
             
-            data = msg.toUtf8();
+            QString combined = messages.join("\n");
+
+            data = combined.toUtf8();
             coordinateData.set(data);
-            
         }
+
+        //imshow("out", image);
 
         if (stopFlag.take()) {
             std::cout << "Pose detection thread stopped" << std::endl;
@@ -118,11 +132,29 @@ int main(int argc, char *argv[])
     
     // Threadsafe values
     ThreadSafeValue<bool> stopFlag(false);    
-    ThreadSafeValue<QByteArray> coordinateData;
+    ThreadSafeValue<QByteArray> coordinateDataTop;
+    ThreadSafeValue<QByteArray> coordinateDataSide;
+
+    // Camera parameters:
+    const int topCamId = 0;
+    const int sideCamId = 1;
+    std::string topCamParamsPath = "../CameraParams/TopCam.yml";
+    std::string sideCamParamsPath = "../CameraParams/SideCam.yml";
+    cv::FileStorage dp_fs("../CameraParams/generic_dp.yml", cv::FileStorage::READ);
+    cv::aruco::DetectorParameters detectorParams;
+    detectorParams.readDetectorParameters(dp_fs.root());
+
+    // UDP client parameters:
+    QHostAddress targetAddress{"127.0.0.1"}; 
+    quint16 targetPortTopCam{8080};
+    quint16 targetPortSideCam{8081};
 
     // Initialize threads
-    std::thread poseDetectionThread(detectPosition, std::ref(coordinateData), std::ref(stopFlag));
-    std::thread udpClientThread(sendCoordinates, std::ref(coordinateData), std::ref(stopFlag));
+    std::thread topPoseDetectionThread(detectPosition, topCamId, topCamParamsPath, detectorParams , std::ref(coordinateDataTop), std::ref(stopFlag));
+    std::thread sidePoseDetectionThread(detectPosition, sideCamId, sideCamParamsPath, detectorParams , std::ref(coordinateDataSide), std::ref(stopFlag));
+    
+    std::thread topUdpClientThread(sendCoordinates, targetAddress, targetPortTopCam, std::ref(coordinateDataTop), std::ref(stopFlag));
+    std::thread sideUdpClientThread(sendCoordinates, targetAddress, targetPortSideCam, std::ref(coordinateDataSide), std::ref(stopFlag));
 
     cv::Mat gui(750, 750, CV_8UC3);
     int key = 0;
@@ -135,16 +167,13 @@ int main(int argc, char *argv[])
 
     stopFlag.set(true);
 
-    if (poseDetectionThread.joinable()) { poseDetectionThread.join(); } 
-    if (udpClientThread.joinable()) { udpClientThread.join(); }
+    if (topPoseDetectionThread.joinable()) { topPoseDetectionThread.join(); } 
+    if (sidePoseDetectionThread.joinable()) { sidePoseDetectionThread.join(); } 
+    if (topUdpClientThread.joinable()) { topUdpClientThread.join(); }
+    if (sideUdpClientThread.joinable()) { sideUdpClientThread.join(); }
 
     std::cout << "Threads stopped" << std::endl;
 
     return 0;
 }
     
-/*
-    int main(){
-        return 0;
-    }
-        */

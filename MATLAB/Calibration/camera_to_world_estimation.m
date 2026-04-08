@@ -57,3 +57,4 @@ R_sidewc = quat2rotm(q_avg_sidewc);
 % Create translation matrix
 T_topwc = T_gen(R_topwc, t_topwc);
 T_sidewc = T_gen(R_sidewc, t_sidewc);
+
