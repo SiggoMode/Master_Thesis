@@ -20,8 +20,6 @@ void signalHandler(int signum) {
 }
 
 void sendCoordinates(QHostAddress targetAddress, quint16 targetPort, ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValue<bool>& stopFlag) {
-    //QHostAddress targetAddress{"127.0.0.1"}; 
-    //quint16 targetPort{8080};
     UdpClient udpClient(targetAddress, targetPort);
 
     QByteArray data;
@@ -152,9 +150,7 @@ int main(int argc, char *argv[])
     detectorParams.readDetectorParameters(dp_fs.root());
 
     // UDP client parameters:
-    //QHostAddress targetAddress{"127.0.0.1"}; 
-    QHostAddress targetAddress{"192.168.137.116"};
-    
+    QHostAddress targetAddress{"192.168.0.209"};
     quint16 targetPortTopCam{8080};
     quint16 targetPortSideCam{8081};
 
