@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 
     // Camera parameters:
     const int topCamId = 0;
-    const int sideCamId = 1;
+    const int sideCamId = 2;
     std::string topCamParamsPath = "../CameraParams/TopCam.yml";
     std::string sideCamParamsPath = "../CameraParams/SideCam.yml";
     cv::FileStorage dp_fs("../CameraParams/generic_dp.yml", cv::FileStorage::READ);
