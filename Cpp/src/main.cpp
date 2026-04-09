@@ -16,7 +16,7 @@ void signalHandler(int signum) {
     if (globalStopFlag) {
         globalStopFlag->set(true);
     }
-    std::cout << "Interrupt signal (" << signum << "received.\n";
+    std::cout << "\nInterrupt signal (" << signum << ") received.\n";
 }
 
 void sendCoordinates(QHostAddress targetAddress, quint16 targetPort, ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValue<bool>& stopFlag) {
@@ -32,7 +32,7 @@ void sendCoordinates(QHostAddress targetAddress, quint16 targetPort, ThreadSafeV
             udpClient.send(data);
         }
         if (stopFlag.take()) {
-            std::cout << "UDP thread stopped" << std::endl;
+            std::cout << "UDP client on port: " << targetPort << " Shutting down" << std::endl;
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -92,7 +92,6 @@ void detectPosition(const int camId, const std::string camParamsPath, cv::aruco:
 
         //! [aruco_pose_estimation3]
         std::vector<int> ids;
-        //std::vector<std::vector<cv::Point2f> > corners, rejected;
         std::vector<std::vector<cv::Point2f> > corners;
 
         detector.detectMarkers(image, corners, ids);
@@ -126,10 +125,8 @@ void detectPosition(const int camId, const std::string camParamsPath, cv::aruco:
             coordinateData.set(data);
         }
 
-        //imshow("out", image);
-
         if (stopFlag.take()) {
-            std::cout << "Pose detection thread stopped" << std::endl;
+            std::cout << "Marker detection from cam: " << camId << " Shutting down" << std::endl;
             break;
         }
 
@@ -168,10 +165,6 @@ int main(int argc, char *argv[])
     std::thread topUdpClientThread(sendCoordinates, targetAddress, targetPortTopCam, std::ref(coordinateDataTop), std::ref(stopFlag));
     std::thread sideUdpClientThread(sendCoordinates, targetAddress, targetPortSideCam, std::ref(coordinateDataSide), std::ref(stopFlag));
 
-    //cv::Mat gui(750, 750, CV_8UC3);
-    //int key = 0;
-
-    //cv::imshow("Quit Window", gui);
 
     // Handle CTRL + C
     globalStopFlag = &stopFlag;
