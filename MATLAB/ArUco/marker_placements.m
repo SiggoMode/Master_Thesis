@@ -3,12 +3,14 @@
 
 %id6 = right marker (looking from the front towards humerus)
 id6.tvec = [-173.86; 54.07; -19.8]/1000;
-id6.R = rotz(pi/2)*roty(-pi/2);
+%id6.R = rotz(-pi/2)*rotx(-pi/2);
+id6.R = [0,1,0; 0, 0, -1; -1, 0, 0]';
 id6.T = T_gen(id6.R, id6.tvec);
 
 %id8 = bottom marker (looking from the front towards humerus)
 id8.tvec = [0; 54.07; -193.6]/1000;
-id8.R = rotz(-pi/2)*rotx(pi);
+%id8.R = rotz(-pi/2)*rotx(pi);
+id8.R = [0,1,0; 1,0,0; 0,0,-1]';
 id8.T = T_gen(id8.R, id8.tvec);
 
 %id16 = top marker (looking from the front towards humerus)
@@ -23,7 +25,8 @@ id18.T = T_gen(id18.R, id18.tvec);
 
 %id26 = front marker (looking from the front towards humerus)
 id26.tvec = [0; 173.862; -73.874]/1000;
-id26.R = rotz(pi/2)*rotx(-pi/2);
+%id26.R = rotz(pi/2)*rotx(-pi/2);
+id26.R = [0,-1,0;0,0,1;-1,0,0];
 id26.T = T_gen(id26.R, id26.tvec);
 
 aruco_markers.id6.Tmh = id6.T;

@@ -12,6 +12,8 @@ r1 = 0.0; r2 = 0.0; r3 = 0.0;
 x = 0.0; y = 0.0; z = 0.0;
 
 data = char(data);
+%disp(string(data))
+%disp(data)
 n = length(data);
 
 current_key = '';
@@ -56,8 +58,8 @@ for i = 1:n
 
     if end_of_measurement && new_id
         IDs = [IDs, ID];
-        rvecs = [rvecs; [r1;r2;r3]];
-        tvecs = [tvecs; [x;y;z]];
+        rvecs = [rvecs, [r1;r2;r3]];
+        tvecs = [tvecs, [x;y;z]];
         % IDs = ID;
         % rvecs = [r1;r2;r3];
         % tvecs = [x;y;z];
