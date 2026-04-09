@@ -3,11 +3,21 @@
 #include <UdpClient.hpp>
 #include <qcoreapplication.h>
 #include <QCoreApplication>
-#include <opencv2/highgui.hpp>
 #include <opencv2/objdetect/aruco_detector.hpp>
 #include <iostream>
 #include "aruco_samples_utility.hpp"
+#include <csignal>
 
+
+ThreadSafeValue<bool>* globalStopFlag = nullptr;
+
+
+void signalHandler(int signum) {
+    if (globalStopFlag) {
+        globalStopFlag->set(true);
+    }
+    std::cout << "Interrupt signal (" << signum << "received.\n";
+}
 
 void sendCoordinates(QHostAddress targetAddress, quint16 targetPort, ThreadSafeValue<QByteArray>& coordinateData, ThreadSafeValue<bool>& stopFlag) {
     //QHostAddress targetAddress{"127.0.0.1"}; 
@@ -25,7 +35,7 @@ void sendCoordinates(QHostAddress targetAddress, quint16 targetPort, ThreadSafeV
             std::cout << "UDP thread stopped" << std::endl;
             break;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
         
     }
 }
@@ -145,7 +155,9 @@ int main(int argc, char *argv[])
     detectorParams.readDetectorParameters(dp_fs.root());
 
     // UDP client parameters:
-    QHostAddress targetAddress{"127.0.0.1"}; 
+    //QHostAddress targetAddress{"127.0.0.1"}; 
+    QHostAddress targetAddress{"192.168.137.116"};
+    
     quint16 targetPortTopCam{8080};
     quint16 targetPortSideCam{8081};
 
@@ -156,16 +168,18 @@ int main(int argc, char *argv[])
     std::thread topUdpClientThread(sendCoordinates, targetAddress, targetPortTopCam, std::ref(coordinateDataTop), std::ref(stopFlag));
     std::thread sideUdpClientThread(sendCoordinates, targetAddress, targetPortSideCam, std::ref(coordinateDataSide), std::ref(stopFlag));
 
-    cv::Mat gui(750, 750, CV_8UC3);
-    int key = 0;
+    //cv::Mat gui(750, 750, CV_8UC3);
+    //int key = 0;
 
-    cv::imshow("Quit Window", gui);
+    //cv::imshow("Quit Window", gui);
 
-    while (key != 27) {
-        key = cv::waitKey(10);
+    // Handle CTRL + C
+    globalStopFlag = &stopFlag;
+    std::signal(SIGINT, signalHandler);
+
+    while (!stopFlag.take()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-
-    stopFlag.set(true);
 
     if (topPoseDetectionThread.joinable()) { topPoseDetectionThread.join(); } 
     if (sidePoseDetectionThread.joinable()) { sidePoseDetectionThread.join(); } 
