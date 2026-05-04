@@ -2,6 +2,7 @@
 system_params.m = 5;   % Arm mass in kg
 system_params.L_h = 1; % Arm length in meters
 system_params.R = 0.1; % Cylinder radius in meters (Arm model)
+system_params.Rhum = 24.285/1000;
 system_params.g = 9.81; % m/s^2
 system_params.dt = 0.01;
 d1 = 1; d2 = 1; d3 = 1;
@@ -20,6 +21,12 @@ system_params.cable_damping_coefficient = 10;
 system_params.cable_spring_coefficient = 50000; % Bra med begge vinkla (quaternions)
 system_params.cable_damping_coefficient = 10000;
 
+system_params.cable_spring_coefficient = 50000; % Okei med wrapping (a)
+system_params.cable_damping_coefficient = 10000;
+
+system_params.cable_spring_coefficient = 50000; % Okei med wrapping
+system_params.cable_damping_coefficient = 1000;
+
 
 % Save space
 m = system_params.m;
@@ -37,14 +44,14 @@ system_params.K1 = 1;
 % Get position parameters
 %pos_param = 'GPT';
 %pos_param = 'Fusion';
-pos_param = 'FinalBuild';
+pos_param = 'Fusion';
 pos_init;
 
 % Get alphas for lower/upper rotator cuff ratio control
 alphas_init;
 
 % Initial conditions
-q0 = [1; 0; 0];
+q0 = [0; 0; 0];
 qdot0 = [0;0;0];
 u0 = u0_calc(q0, system_params);
 system_params.u0 = u0;
@@ -54,6 +61,8 @@ q0_quat = euler_to_quaternion(q0);
 qdot0_quat = zeros(4,1);
 omega0 = qdot0;
 
+% Wrapping plane init:
+v_init;
 
 % Create bus object for Simulink
 evalin('base', ['clear ' 'System_params_bus']);

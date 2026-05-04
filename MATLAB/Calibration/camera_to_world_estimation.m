@@ -1,4 +1,4 @@
-% Calculate average of Tcw for both cameras
+% Calculate average of Twc for both cameras
 ids = fieldnames(top_cam);
 
 % Calculate inverse of T_cm to get T_mc
