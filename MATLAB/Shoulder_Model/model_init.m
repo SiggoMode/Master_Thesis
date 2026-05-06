@@ -27,6 +27,9 @@ system_params.cable_damping_coefficient = 10000;
 system_params.cable_spring_coefficient = 50000; % Okei med wrapping
 system_params.cable_damping_coefficient = 1000;
 
+system_params.cable_spring_coefficient = 50000; % Okei med wrapping + Fusion modell
+system_params.cable_damping_coefficient = 1000;
+
 
 % Save space
 m = system_params.m;
@@ -54,10 +57,11 @@ alphas_init;
 q0 = [0; 0; 0];
 qdot0 = [0;0;0];
 u0 = u0_calc(q0, system_params);
+u_offset = zeros(size(u0));
 system_params.u0 = u0;
 
 % Quaternions init:
-q0_quat = euler_to_quaternion(q0);
+q0_quat = euler2quat(q0);
 qdot0_quat = zeros(4,1);
 omega0 = qdot0;
 
@@ -76,12 +80,17 @@ evalin('base', ['clear ' oldName]);
 
 % Dummy controller inputs
 angle = 10; % In degrees 
+angle = angle*pi/180;
+set_points = [angle;0;0];
+set_points_q = euler2quat(set_points);
+
 Tau = 10; % 1/f
 T_stop = 100; % seconds
 t = 0:dt:T_stop;
-x_s = zeros(length(t), 6); % N×nx matrix
+x_s = zeros(length(t), 7); % N×nx matrix
 set_point_zero = timeseries(x_s, t); % For easy debugging
-x_s(:,1) = angle*pi/180 * ones(length(t), 1); % N×nx matrix
+x_s(1:end,1:4) = repmat(set_points_q',length(t),1);
+%x_s(:,1) = angle*pi/180 * ones(length(t), 1); % N×nx matrix
 %x_s(600:end,2) = (angle+10)*pi/180 * ones(length(600:size(t,2)), 1); % N×nx matrix
 %x_s(900:end,2) = (angle+20)*pi/180 * ones(length(900:size(t,2)), 1); % N×nx matrix
 %x_s(800:end,2) = (angle+15)*pi/180 * ones(length(800:size(t,2)), 1); % N×nx matrix

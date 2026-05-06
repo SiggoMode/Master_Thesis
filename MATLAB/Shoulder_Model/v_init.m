@@ -1,6 +1,6 @@
 fields = fieldnames(system_params.cables);
 
-q_neutral = euler_to_quaternion([0;0;0]);
+q_neutral = euler2quat([0;0;0]);
 R_neutral = quat2rotm(q_neutral);
 
 for i = 1:numel(fields)

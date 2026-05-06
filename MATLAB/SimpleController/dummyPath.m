@@ -3,11 +3,12 @@ angleA_old = 0;
 angleB_old = 0;
 angleC_old = 0;
 
-angleA_new = 0;
-angleB_new = 60;
+angleA_new = 60;
+angleB_new = 0;
 angleC_new = 0;
 
-a = 1/2; % 1 degree per 2 timesteps
+%a = 1/2; % 1 degree per 2 timesteps 50 degress/second
+a = 6*dt;
 
 q = [angleA_old; angleB_old; angleC_old];
 qs = [angleA_new; angleB_new; angleC_new];

@@ -1,4 +1,4 @@
-function q = euler_to_quaternion(theta)
+function q = euler2quat(theta)
 % theta = [A; B; C] (roll, pitch, yaw)
 
 A = theta(1);

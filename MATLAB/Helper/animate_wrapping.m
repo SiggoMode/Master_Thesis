@@ -6,7 +6,7 @@ hold on;
 view(3);
 
 % Debugging variable
-use_wrapping = false;
+use_wrapping = true;
 
 R_humerus = system_params.Rhum;
 
