@@ -29,15 +29,6 @@ void setup() {
 }
 
 void loop() {
-  /*
-  Serial.println(scales[0].get_units());
-  Serial.println(scales[1].get_units());
-  Serial.println(scales[2].get_units());
-  Serial.println(scales[3].get_units());
-  Serial.println(scales[4].get_units());
-  Serial.println(scales[5].get_units());
-  Serial.println(scales[6].get_units());
-  */
   
   for (int i = 0; i < N_LOADING_CELLS; i++) {
     load_cell_value[i] = scales[i].get_units() + offset[i];

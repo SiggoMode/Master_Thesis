@@ -95,7 +95,7 @@ elseif matches(pos_param, 'FinalBuild')
     system_params.cables.PUR.M = [129.56; 78.8; -12]/1000; % posterior upper rotator cuff medial connection
     
     system_params.cables.PLR.L = [-31; 0; 0]/1000; % posterior lower rotator cuff lateral connection
-    system_params.cables.PLR.M = [130.8; 78.8; -108.8]; % posterior lower rotator cuff medial connection
+    system_params.cables.PLR.M = [130.8; 78.8; -108.8]/1000; % posterior lower rotator cuff medial connection
     
     system_params.cables.AUR.L = [-31; 0; 0]/1000; % anterior upper rotator cuff lateral connection
     system_params.cables.AUR.M = [129.56; -69.55; -12.89]/1000; % anterior upper rotator cuff medial connection

@@ -7,7 +7,8 @@ angleA_new = 60;
 angleB_new = 0;
 angleC_new = 0;
 
-a = 1/2; % 1 degree per 2 timesteps
+%a = 15*dt; % 15 degrees pr. second
+a = 1*dt; % 1 degree pr. second
 
 q = [angleA_old; angleB_old; angleC_old];
 qs = [angleA_new; angleB_new; angleC_new];
@@ -15,8 +16,12 @@ qs = [angleA_new; angleB_new; angleC_new];
 qs_path = dummySlopes(qs, q, a, system_params);
 
 % add padding
-pad = length(t) - length(qs_path);
-qs_path = [qs_path, repmat(qs,1,pad)];
+wait_time = 10; % Seconds
+startpad = round(wait_time / dt);
+qs_path = [repmat(q, 1, startpad), qs_path];
+
+endpad = (length(t) - length(qs_path));
+qs_path = [qs_path, repmat(qs,1,endpad)];
 
 % Convert to radians and calculate u:
 qs_path = qs_path * pi/180;

@@ -44,6 +44,7 @@ pos_init;
 alphas_init;
 
 % Initial conditions
+q_neutral = [0;0;0];
 q0 = [1; 0; 0];
 qdot0 = [0;0;0];
 u0 = u0_calc(q0, system_params);
@@ -54,6 +55,8 @@ q0_quat = euler_to_quaternion(q0);
 qdot0_quat = zeros(4,1);
 omega0 = qdot0;
 
+% Offset term to Arduino
+u_offset = [106; 80; 79; 75; 67; 72; 80]/1000 - u0_calc(q_neutral, system_params);
 
 % Create bus object for Simulink
 evalin('base', ['clear ' 'System_params_bus']);

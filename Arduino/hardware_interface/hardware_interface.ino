@@ -23,16 +23,16 @@ int reply;
 
 // System parameters
 const int N_ACTUATORS = 7;
-const float KP[N_ACTUATORS] = {1, 1, 0.5, 4, 4, 4, 0.5};
+const float KP[N_ACTUATORS] = {1, 1, 1, 4, 4, 4, 0.5};
 const float KI[N_ACTUATORS] = {0};
 const float KD[N_ACTUATORS] = {0};
 float i_contributions[N_ACTUATORS] = {0};
 float prev_errors[N_ACTUATORS] = {0};
 float previous_errors[N_ACTUATORS] = {0};
 float dt = 0.01;
-unsigned long dt_millis = 100; //milliseconds
+unsigned long dt_millis = 10; //milliseconds
 unsigned long prev_time = millis();
-float set_values[N_ACTUATORS] = {60, 70, 60, 60, 50, 55, 80};
+float set_values[N_ACTUATORS] = {106, 80, 79, 75, 67, 72, 80};
 float u[N_ACTUATORS] = {64};
 #define u_saturation_l 0
 #define u_saturation_u 127
@@ -78,6 +78,9 @@ String simulink_string = "";
 bool string_complete = false;
 
 void setup() {
+  roboclaw.begin(38400); // Open roboclaw serial ports
+  pinMode(23, OUTPUT);
+  boot_TOF_sensors();
   Serial.begin(115200);
   // wait until serial port opens for native USB devices
   while (! Serial) {
@@ -85,23 +88,16 @@ void setup() {
   }
 
 
-  roboclaw.begin(38400); // Open roboclaw serial ports
   for (int i = 0; i < END_SWITCH_N; i++) {
     pinMode(END_SWITCH[i], INPUT);
   }
   pinMode(DEAD_MAN_SWITCH, INPUT);
-
-
-  pinMode(23, OUTPUT);
-  
-   
-  boot_TOF_sensors();
 }
 
 void loop() {
   prev_time = millis();
   
-  
+  //*
   if(Serial.available()) { // Check for incoming manual steering signals
     char incoming_byte = Serial.read();
     Serial.print(incoming_byte);
@@ -122,7 +118,7 @@ void loop() {
       dir = 0;
     }
   }
-  
+  //*/
 
   if (digitalRead(DEAD_MAN_SWITCH)) { stopAll = false; }
   else { stopAll = true; 
@@ -176,16 +172,15 @@ void loop() {
     Serial.print(": ");
     Serial.println(tof_FIR_filtered[i]);
   }
-  */
+*/
+
+  
 
   
 
   int actuator = 6;
   //testPid(tof_FIR_filtered, actuator);
-/*
-  Serial.print("Output from PID: ");
-  Serial.println(u[actuator]);
-  */
+  
   /*
   if (!digitalRead(END_SWITCH[0])) {
     Serial.println("Rear delt limit switch activated");
@@ -204,6 +199,14 @@ void loop() {
   }
   */
   pid(tof_FIR_filtered);
+/*
+  for (int i = 0; i<N_ACTUATORS; i++) {
+    Serial.print("Output from PID u = ");
+    Serial.print(i+1);
+    Serial.print(": ");
+    Serial.println(u[i]);
+  }
+  */
   steerMotors();
 
   if (stopAll) {
@@ -290,10 +293,8 @@ void boot_TOF_sensors() {
     while(!lox[i].begin(TOF_ADDRESSES[i])) {
       //Serial.print(F("Failed to boot Sensor: "));
       //Serial.println({i+1});
-      delay(1000);
+      delay(10);
     }
-    
-    delay(10);
   }
 }
 
@@ -309,7 +310,16 @@ void steerMotors() {
   //Serial.print("Speed: ");
   //Serial.println(speed);
   if (stopAll) { 
-    for (int i=0;i<N_ACTUATORS;i++) { u[i] = 64; }  // Set all motors to stop (64)
+    for (int i=0;i<N_ACTUATORS;i++) { 
+      u[i] = 64;
+     }  // Set all motors to stop (64)
+    roboclaw.ForwardBackwardM1(address1, 64);
+    roboclaw.ForwardBackwardM2(address1, 64);
+    roboclaw.ForwardBackwardM1(address2, 64);
+    roboclaw.ForwardBackwardM2(address2, 64);
+    roboclaw.ForwardBackwardM1(address3, 64);
+    roboclaw.ForwardBackwardM2(address3, 64);
+    roboclaw.ForwardBackwardM1(address4, 64);
   }
   else {
     /*
@@ -328,7 +338,7 @@ void steerMotors() {
     */
     //roboclaw.ForwardBackwardM2(address3, u[6]);
     
-    roboclaw.ForwardBackwardM1(address1, speed);
+    roboclaw.ForwardBackwardM2(address2, speed);
     Serial.print("We tryna make the motor go: ");
     Serial.println(speed);
     
@@ -348,19 +358,16 @@ void steerMotors() {
 /*
 void serialEvent() {
   while (Serial.available() && !string_complete) {
-    if (digitalRead(DEAD_MAN_SWITCH)) { stopAll = false; }
-    else { stopAll = true; }
-    steerMotors();
     //Serial.println("E det fremdeles her?");
     char inChar = (char)Serial.read();
     bool endline_reached = (inChar == '\n');
 
     if (endline_reached) { string_complete = true; }
     else { simulink_string += inChar; }
-    if 
   }
   string_complete = false;
-}*/
+}
+*/
 
 
 void parseData(String data) {
@@ -369,7 +376,7 @@ void parseData(String data) {
     if (data.startsWith("<") && data.endsWith(">")) {
 
     data.remove(0, 1);              // remove '<'
-    data.remove(data.length()-1);   // remove '>\n'
+    data.remove(data.length()-1);   // remove '>'
 
     int index = 0;
     char *token = strtok((char*)data.c_str(), ",");
@@ -406,7 +413,6 @@ void checkForMirroring() {
       steerMotors();
 
       boot_TOF_sensors();
-
       matchCount[i] = 0;
     }
   }
