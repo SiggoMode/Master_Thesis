@@ -21,8 +21,8 @@ function plot_func(data, t, titleStr, y_label, x_label, legendNames)
     ylabel(y_label);
 
     if hasLegend
-        %lgd = legend('Location','best');
-        lgd = legend('Location','ne');
+        lgd = legend('Location','best');
+        %lgd = legend('Location','ne');
         lgd.TextColor = 'k';
     end
 
@@ -45,7 +45,7 @@ function plot_func(data, t, titleStr, y_label, x_label, legendNames)
     set(gca, 'XColor', 'k', 'YColor', 'k');
     set(findall(hfig,'Type','text'),'Color','k');
 
-    fname = append('Gathered_Data/post_actuator_model/FusionPositions/K=50k_c=1k/', titleStr);
+    fname = append('Gathered_Data/post_actuator_model/FusionPositions/K=220k_c=5k/', titleStr);
 
     pos = get(hfig, 'Position');
     set(hfig, 'PaperPositionMode', 'Auto', ...
@@ -66,6 +66,6 @@ StateData = squeeze(permute(out.States.Data, [3 1 2]));
 EulerAngles = StateData(:,1:3)*180/pi;
 TensionData = squeeze(permute(out.cable_tension.Data, [3 1 2]));
 
-plot_func(EulerAngles, t_plot, 'DummyPath60DAbduction_a0.06', 'Angles in degrees', 'Time', {'Extension','Abduction','Int. rotation'});
+plot_func(EulerAngles, t_plot, 'DummyPath60DAbduction_a0.06', 'Angles in degrees', 'Time(s)', {'Extension','Abduction','Int. rotation'});
 
-plot_func(TensionData, t_plot, 'TensionDummyPath60DAbduction_a0.06', 'Tension (N)', 'Time', {'FD','LD','RD','PUR','PLR','AUR','ALR'});
+%plot_func(TensionData, t_plot, 'TensionDummyPath60DAbduction_a0.06', 'Tension (N)', 'Time', {'FD','LD','RD','PUR','PLR','AUR','ALR'});

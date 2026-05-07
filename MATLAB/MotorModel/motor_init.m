@@ -1,7 +1,14 @@
 Ra = 2.4935;
-Jm = 100000;
 Ke = 2045.8;
 Km = Ke;
-Ml = 0;
 Mf = 1227.48;
-Mf = 0;
+Ml = 0;
+
+testing = true;
+
+% Tunable
+if testing
+    Jm = 100000;
+    Ml = 3000;
+    Mf = 0;
+end

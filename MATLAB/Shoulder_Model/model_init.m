@@ -27,8 +27,11 @@ system_params.cable_damping_coefficient = 10000;
 system_params.cable_spring_coefficient = 50000; % Okei med wrapping
 system_params.cable_damping_coefficient = 1000;
 
-system_params.cable_spring_coefficient = 50000; % Okei med wrapping + Fusion modell
-system_params.cable_damping_coefficient = 1000;
+%system_params.cable_spring_coefficient = 50000; % Okei med wrapping + Fusion modell
+%system_params.cable_damping_coefficient = 1000;
+
+system_params.cable_spring_coefficient = 0; % Turn off system
+system_params.cable_damping_coefficient = 0;
 
 
 % Save space
