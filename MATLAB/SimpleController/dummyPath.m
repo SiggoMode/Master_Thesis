@@ -8,7 +8,8 @@ angleB_new = 0;
 angleC_new = 0;
 
 %a = 15*dt; % 15 degrees pr. second
-a = 1*dt; % 1 degree pr. second
+%a = 1*dt; % 1 degree pr. second 50 degress/second
+a = 6*dt;
 
 q = [angleA_old; angleB_old; angleC_old];
 qs = [angleA_new; angleB_new; angleC_new];
