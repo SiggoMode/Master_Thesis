@@ -17,13 +17,13 @@ Posterior Lower Rotator
 
 */
 
-//LiquidCrystal lcd(12, 11, 5, 4, 3, 2)
 const int switchPin = 6;
 int reply;
 
 // System parameters
 const int N_ACTUATORS = 7;
-const float KP[N_ACTUATORS] = {1, 1, 1, 4, 4, 4, 0.5};
+//const float KP[N_ACTUATORS] = {1, 1, 1, 4, 4, 4, 0.5};
+const float KP[N_ACTUATORS] = {0.5, 0.5, 1, 4, 4, 4, 0.5};
 const float KI[N_ACTUATORS] = {0};
 const float KD[N_ACTUATORS] = {0};
 float i_contributions[N_ACTUATORS] = {0};
@@ -32,7 +32,8 @@ float previous_errors[N_ACTUATORS] = {0};
 float dt = 0.01;
 unsigned long dt_millis = 10; //milliseconds
 unsigned long prev_time = millis();
-float set_values[N_ACTUATORS] = {106, 80, 79, 75, 67, 72, 80};
+//float set_values[N_ACTUATORS] = {106, 80, 79, 75, 67, 72, 80};
+float set_values[N_ACTUATORS] = {90, 80, 79, 75, 90, 72, 80};
 float u[N_ACTUATORS] = {64};
 #define u_saturation_l 0
 #define u_saturation_u 127
@@ -55,9 +56,7 @@ bool dir = 1;
 
 // Range sensors
 Adafruit_VL53L0X lox[N_ACTUATORS] = Adafruit_VL53L0X();
-//const int XSHUT[6] = {2,3,4,5,6,7};
 const int XSHUT[7] = {41,43,45,47,49,51,53};
-//const int XSHUT[1] = {49};
 const byte TOF_ADDRESSES[7] = {0x36, 0x35, 0x34, 0x33, 0x32, 0x31, 0x30};
 const int DISTANCE_SENSOR_N = sizeof(XSHUT) / sizeof(XSHUT[0]);
 const float FIR_COEFFS[5] = { 0.028, 0.237, 0.470, 0.237, 0.028 };
@@ -78,11 +77,11 @@ String simulink_string = "";
 bool string_complete = false;
 
 void setup() {
-  roboclaw.begin(38400); // Open roboclaw serial ports
+  roboclaw.begin(38400); 
   pinMode(23, OUTPUT);
   boot_TOF_sensors();
   Serial.begin(115200);
-  // wait until serial port opens for native USB devices
+  
   while (! Serial) {
     delay(1);
   }
@@ -174,12 +173,17 @@ void loop() {
   }
 */
 
-  
 
   
-
-  int actuator = 6;
-  //testPid(tof_FIR_filtered, actuator);
+  //Serial.println(tof_sensor_meas[0]);
+  Serial.print("<");
+  Serial.print(tof_sensor_meas[0]); // Print Front delt sensor meas
+  Serial.print(',');
+  Serial.print(tof_FIR_filtered[0]);
+  Serial.println(">");
+  //Serial.println(tof_sensor_meas[4]); // Print AUR sensor meas
+  int actuator = 0;
+  testPid(tof_FIR_filtered, actuator);
   
   /*
   if (!digitalRead(END_SWITCH[0])) {
@@ -198,7 +202,7 @@ void loop() {
     stopAll = true;
   }
   */
-  pid(tof_FIR_filtered);
+  //pid(tof_FIR_filtered);
 /*
   for (int i = 0; i<N_ACTUATORS; i++) {
     Serial.print("Output from PID u = ");
@@ -208,6 +212,7 @@ void loop() {
   }
   */
   steerMotors();
+
 
   if (stopAll) {
     roboclaw.ForwardBackwardM1(address1, 64);
@@ -338,9 +343,10 @@ void steerMotors() {
     */
     //roboclaw.ForwardBackwardM2(address3, u[6]);
     
-    roboclaw.ForwardBackwardM2(address2, speed);
-    Serial.print("We tryna make the motor go: ");
-    Serial.println(speed);
+    //roboclaw.ForwardBackwardM1(address1, speed);
+    roboclaw.ForwardBackwardM1(address1, u[0]);
+    //Serial.print("Active motor input: ");
+    //Serial.println(speed);
     
     /*
     roboclaw.ForwardBackwardM1(address1, u[0]);
