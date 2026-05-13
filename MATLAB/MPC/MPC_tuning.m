@@ -2,13 +2,13 @@ nx_mpc = nx_EKF+1; % Add affine term
 nd_mpc = nd_EKF;
 nx_tot = nx_mpc+nd_mpc;
 nu_mpc=nu_EKF;
-N = 128;                   % Time steps
+N = 64;                   % Time steps
 M = 10;                   % Control horizon
 x0_mpc = zeros(nx_mpc,1); % Initial states
 z = zeros();
 algorithm = 'active-set';
 useAllEstimates = true;
-u0_mpc = zeros(nu_mpc,1);
+u0_mpc = u0;
 
 % Lower bounds
 lbA = -pi/2;
@@ -21,7 +21,7 @@ lbx_affine = -99999;
 lbx = repmat([lbA;lbB;lbC;lbAdot;lbBdot;lbCdot], [N,1]);
 lbx_affine = repmat([lbA;lbB;lbC;lbAdot;lbBdot;lbCdot;lbx_affine], [N,1]);
 %lbu = zeros(nu_mpc*N,1);
-lbu = -ones(nu_mpc*N,1)*2500;
+lbu = -ones(nu_mpc*N,1)*500;
 lb = [lbx; lbu];
 lbAffine = [lbx_affine; lbu];
 
@@ -35,7 +35,7 @@ ubCdot = 99999;
 ubxAffine = 99999;
 ubx = repmat([ubA;ubB;ubC;ubAdot;ubBdot;ubCdot], [N,1]);
 ubx_affine = repmat([ubA;ubB;ubC;ubAdot;ubBdot;ubCdot;ubxAffine], [N,1]);
-ubu = ones(nu_mpc*N,1)*2500;
+ubu = ones(nu_mpc*N,1)*500;
 ub = [ubx; ubu];
 ubAffine = [ubx_affine; ubu];
 
@@ -52,18 +52,21 @@ ubAffine = [ubx_affine; ubu];
 % Bra med tension model (N = 128): 
 % AW(17), ARW(8), IW(1), IRW(10)
 
-angleWeights = 17; 
+% MV target
+% AW(90), ARW(12), IW(80), IRW(10)
+
+angleWeights = 1; 
 AWeight = angleWeights;
 BWeight = angleWeights;
 CWeight = angleWeights;
 %CWeight = 20;
-angelRateWeights = 8;
+angelRateWeights = 1;
 ARateWeight = angelRateWeights;
 BRateWeight = angelRateWeights;
 CRateWeight = angelRateWeights;
 %CRateWeight = 20;
-inputWeights = 1;
-inputRateWeights = 10;
+inputWeights = 80;
+inputRateWeights = 60;
 
 Q = eye(nx_mpc)*100;
 R = eye(nu_mpc)*1;
@@ -132,6 +135,8 @@ setEstimator(MPC_controller,'custom')
 % Assuming your MPC object is named 'mpcobj'
 % Sets disturbance to zero for all output channels
 setoutdist(MPC_controller, 'model', tf(zeros(6,1))); 
+MPC_controller.Model.Nominal.U = u0_mpc;
+MPC_controller_euler.Model.Nominal.U = u0_mpc;
 
 % Non linear MPC:
 NL_mpc = nlmpc(nx_mpc, 6, nu_mpc);
