@@ -13,25 +13,25 @@ system_params.D = diag([d1, d2, d3]*0); % Friction removed
 % Good for one angle at the time: 50k, 0.1
 %system_params.cable_spring_coefficient = 500000;
 %system_params.cable_spring_coefficient = 50000; % Bra med b MPC
-system_params.cable_spring_coefficient = 500000;
+system_params.cable_spring_coefficient = 5000;
 system_params.cable_damping_coefficient = 10;
 %system_params.cable_spring_coefficient = 300000; % Bra med a dc
 %system_params.cable_damping_coefficient = 5100;
 
-system_params.cable_spring_coefficient = 50000; % Bra med begge vinkla (quaternions)
-system_params.cable_damping_coefficient = 10000;
+% system_params.cable_spring_coefficient = 50000; % Bra med begge vinkla (quaternions)
+% system_params.cable_damping_coefficient = 10000;
+% 
+% system_params.cable_spring_coefficient = 50000; % Okei med wrapping (a)
+% system_params.cable_damping_coefficient = 10000;
 
-system_params.cable_spring_coefficient = 50000; % Okei med wrapping (a)
-system_params.cable_damping_coefficient = 10000;
-
-system_params.cable_spring_coefficient = 50000; % Okei med wrapping
-system_params.cable_damping_coefficient = 1000;
+%system_params.cable_spring_coefficient = 50000; % Okei med wrapping
+%system_params.cable_damping_coefficient = 1000;
 
 %system_params.cable_spring_coefficient = 50000; % Okei med wrapping + Fusion modell
 %system_params.cable_damping_coefficient = 1000;
 
-system_params.cable_spring_coefficient = 0; % Turn off system
-system_params.cable_damping_coefficient = 0;
+%system_params.cable_spring_coefficient = 0; % Turn off system
+%system_params.cable_damping_coefficient = 0;
 
 
 % Save space
@@ -95,8 +95,11 @@ Tau = 10; % 1/f
 T_stop = 100; % seconds
 t = 0:dt:T_stop;
 x_s = zeros(length(t), 7); % N×nx matrix
+x_s_euler = zeros(length(t), 6);
 set_point_zero = timeseries(x_s, t); % For easy debugging
+set_point_zero_euler = timeseries(x_s_euler, t);
 x_s(1:end,1:4) = repmat(set_points_q',length(t),1);
+x_s_euler(1:end, 1:3) = repmat(set_points', length(t),1);
 %x_s(:,1) = angle*pi/180 * ones(length(t), 1); % N×nx matrix
 %x_s(600:end,2) = (angle+10)*pi/180 * ones(length(600:size(t,2)), 1); % N×nx matrix
 %x_s(900:end,2) = (angle+20)*pi/180 * ones(length(900:size(t,2)), 1); % N×nx matrix
@@ -104,3 +107,4 @@ x_s(1:end,1:4) = repmat(set_points_q',length(t),1);
 %x_s(1200:end,2) = (angle+20)*pi/180 * ones(length(1200:size(t,2)), 1); % N×nx matrix
 %x_s(:,3) = angle*pi/180 * sin((2*pi/Tau)*t);
 set_point = timeseries(x_s, t);
+set_point_euler = timeseries(x_s_euler, t);

@@ -20,6 +20,8 @@ function plot_func(data, t, titleStr, y_label, x_label, legendNames)
     xlabel(x_label);
     ylabel(y_label);
 
+    xlim([0, t(end)]);
+
     if hasLegend
         lgd = legend('Location','best');
         %lgd = legend('Location','ne');
@@ -45,7 +47,8 @@ function plot_func(data, t, titleStr, y_label, x_label, legendNames)
     set(gca, 'XColor', 'k', 'YColor', 'k');
     set(findall(hfig,'Type','text'),'Color','k');
 
-    fname = append('Gathered_Data/post_actuator_model/FusionPositions/K=220k_c=5k/', titleStr);
+    fname = append('Gathered_Data/LinSysTest/', titleStr);
+    %fname = append('Gathered_Data/PhysicalActuatorTest/ALR/', titleStr);
 
     pos = get(hfig, 'Position');
     set(hfig, 'PaperPositionMode', 'Auto', ...
@@ -60,12 +63,34 @@ function plot_func(data, t, titleStr, y_label, x_label, legendNames)
 end
 
 % Plot states
-t_plot = out.tout(:);  % ensure column
+t_plot = out.tout(:);
+%t_plot = out.TOF_meas.Time;
+t1_s = 17; % seconds
+t2_s = 22.7; % seconds
+dt_plot = t_plot(3) - t_plot(2);
 
-StateData = squeeze(permute(out.States.Data, [3 1 2]));
-EulerAngles = StateData(:,1:3)*180/pi;
-TensionData = squeeze(permute(out.cable_tension.Data, [3 1 2]));
+t1_n = round(t1_s/dt_plot);
+t2_n = round(t2_s/dt_plot);
 
-plot_func(EulerAngles, t_plot, 'DummyPath60DAbduction_a0.06', 'Angles in degrees', 'Time(s)', {'Extension','Abduction','Int. rotation'});
+% StateData = squeeze(permute(out.States.Data, [3 1 2]));
+% EulerAngles = StateData(:,1:3)*180/pi;
+% TensionData = squeeze(permute(out.cable_tension.Data, [3 1 2]));
+% 
+% plot_func(EulerAngles, t_plot, 'DummyPath60DAbduction_a0.06', 'Angles in degrees', 'Time(s)', {'Extension','Abduction','Int. rotation'});
+% 
+% plot_func(TensionData, t_plot, 'TensionDummyPath60DAbduction_a0.06', 'Tension (N)', 'Time(s)', {'FD','LD','RD','PUR','PLR','AUR','ALR'});
+% 
+% TOF_measured = squeeze(permute(out.TOF_meas.data, [3 1 2]));
+% t_plot = t_plot(1:t2_n-t1_n+1);
+% TOF_measured = TOF_measured(t1_n:t2_n,:);
+% plot_func(TOF_measured, t_plot, 'ActuatorLoop_60mm-90mm_3', 'Position (mm)', 'Time(s)', {'Unfiltered', 'Filtered'});
 
-%plot_func(TensionData, t_plot, 'TensionDummyPath60DAbduction_a0.06', 'Tension (N)', 'Time', {'FD','LD','RD','PUR','PLR','AUR','ALR'});
+x = squeeze(permute(out.quaternion_all_states.Data, [3 1 2]));
+linSys = squeeze(permute(out.Linearized_system_results.Data, [3 1 2]));
+linSys = linSys(:,1:7);
+rk4 = squeeze(permute(out.rk4_results.Data, [3 1 2]));
+
+
+plot_func(x, t_plot, 'simulated_raw', '', 'Time(s)', {'$q_{0}$', '$q_{1}$', '$q_{2}$', '$q_{3}$', '$\omega_{1}$', '$\omega_{2}$', '$\omega_{3}$'});
+plot_func(linSys, t_plot, 'simulated_raw', '', 'Time(s)', {'$q_{0}$', '$q_{1}$', '$q_{2}$', '$q_{3}$', '$\omega_{1}$', '$\omega_{2}$', '$\omega_{3}$'});
+plot_func(rk4, t_plot, 'simulated_raw', '', 'Time(s)', {'$q_{0}$', '$q_{1}$', '$q_{2}$', '$q_{3}$', '$\omega_{1}$', '$\omega_{2}$', '$\omega_{3}$'});
